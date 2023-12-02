@@ -1,1 +1,8 @@
+# database
 *.db
+
+# Vscode 
+.vscode
+
+# go artifacts
+*.exe
