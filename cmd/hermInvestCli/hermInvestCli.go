@@ -7,6 +7,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: there is a lot of thing to do
+// 1. Add testcases for 'add', 'delete', ...:
+// * Test foreign key and date; complete test documentation.
+// 2. Separate 'add', 'delete', and other functionalities into individual files; complete the missing parts.
+// 3. Refactor 'version' functionality into a separate file.
+// 4. Complete comprehensive documentation for CLI instructions.
+// 5. Update the documentation.
+// 6. Revisit CLI interface design for enhancements.
+
 // stock
 
 var stockCmd = &cobra.Command{
