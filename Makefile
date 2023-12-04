@@ -5,7 +5,7 @@ GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 
 # Paths and names
-SRC_NAME=hermInvestCli
+SRC_NAME=*
 SRC_FOLDER=./cmd/hermInvestCli
 SRC_PATH=$(SRC_FOLDER)/$(SRC_NAME)
 BIN_NAME=hermInvestCli
