@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -20,13 +19,9 @@ var updateCmd = &cobra.Command{
 		transactionID := args[0]
 		unitPrice := args[1]
 
-		// TODO: extract DB connection to configuration
-		// SQLite3 connection with foreign keys enabled
-		dbPath := "./internal/app/database/dev-database.db?_foreign_keys=true"
-		db, err := sql.Open("sqlite3", dbPath)
+		db, err := GetDBConnection()
 		if err != nil {
-			fmt.Println("Error connecting to the database:", err)
-			return
+			fmt.Println("Error: ", err)
 		}
 		defer db.Close()
 

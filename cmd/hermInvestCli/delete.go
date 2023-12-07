@@ -26,13 +26,9 @@ var deleteCmd = &cobra.Command{
 			return
 		}
 
-		// sqlite3 connection with  foreign keys enabled
-		var dbPath = "./internal/app/database/dev-database.db?_foreign_keys=true"
-
-		db, err := sql.Open("sqlite3", dbPath)
+		db, err := GetDBConnection()
 		if err != nil {
-			fmt.Println("Error connecting to the database:", err)
-			return
+			fmt.Println("Error: ", err)
 		}
 		defer db.Close()
 

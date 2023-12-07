@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"time"
 
@@ -28,10 +27,8 @@ var addCmd = &cobra.Command{
 			date = time.Now().Format("2006-01-02")
 		}
 
-		// sqlite3 connection with  foreign keys enabled
-		var dbPath = "./internal/app/database/dev-database.db?_foreign_keys=true"
 
-		db, err := sql.Open("sqlite3", dbPath)
+		db, err := GetDBConnection()
 		if err != nil {
 			fmt.Println("Error: ", err)
 		}
