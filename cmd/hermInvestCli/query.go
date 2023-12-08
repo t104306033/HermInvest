@@ -57,10 +57,10 @@ var queryCmd = &cobra.Command{
 }
 
 func buildQueryAll() string {
-	return fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction")
+	return fmt.Sprintln("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction")
 }
 func buildQueryByID(id string) string {
-	return fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction WHERE id = '%s'", id)
+	return fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = '%s'", id)
 }
 
 func buildQueryByDetails(stockNo, tranType, date string) string {
@@ -78,7 +78,7 @@ func buildQueryByDetails(stockNo, tranType, date string) string {
 
 	var query string
 	if len(conditions) > 0 {
-		query = fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
+		query = fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
 	} else {
 		query = "SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction"
 	}
@@ -94,14 +94,15 @@ func displayResults(rows *sql.Rows) {
 		var tranType, quantity int
 		var unitPrice float64
 		// var date string
-		// var totalAmount, taxes int
+		var totalAmount, taxes int
 
-		if err := rows.Scan(&id, &stockNo, &tranType, &quantity, &unitPrice); err != nil {
+		err := rows.Scan(&id, &stockNo, &tranType, &quantity, &unitPrice, &totalAmount, &taxes)
+		if err != nil {
 			fmt.Println("Error scanning row:", err)
 			return
 		}
 
-		fmt.Printf("ID: %d, Stock No: %s, Type: %d, Quantity: %d, Unit Price: %.2f\n", id, stockNo, tranType, quantity, unitPrice)
+		fmt.Printf("ID: %d, Stock No: %s, Type: %d, Quantity: %d, Unit Price: %.2f, Total Amount: %d, taxes: %d\n", id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes)
 
 	}
 }
