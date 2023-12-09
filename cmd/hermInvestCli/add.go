@@ -7,6 +7,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// 1. check input
+// 2. calc total amount and taxes
+// 3. build sql syntax
+// 4. insert into sql
+// 5. print out result
+
 var addCmd = &cobra.Command{
 	Use:   "add id stockNo type quantity unitPrice [date]",
 	Short: "Add stock",
