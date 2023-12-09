@@ -87,6 +87,7 @@ func buildQueryByDetails(stockNo, tranType, date string) string {
 }
 
 func displayResults(rows *sql.Rows) {
+	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
 	for rows.Next() {
 		var id int
 		var stockNo string
@@ -102,8 +103,7 @@ func displayResults(rows *sql.Rows) {
 			return
 		}
 
-		fmt.Printf("ID: %d, Stock No: %s, Type: %d, Quantity: %d, Unit Price: %.2f, Total Amount: %d, taxes: %d\n", id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes)
-
+		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes)
 	}
 }
 
