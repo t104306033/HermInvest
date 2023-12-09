@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -22,8 +23,14 @@ var addCmd = &cobra.Command{
 		id := args[0]
 		stockNo := args[1]
 		tranType := args[2]
-		quantity := args[3]
-		unitPrice := args[4]
+		quantity, err := strconv.Atoi(args[3])
+		if err != nil {
+			fmt.Println("Error parsing integer: ", err)
+		}
+		unitPrice, err := strconv.ParseFloat(args[4], 64)
+		if err != nil {
+			fmt.Println("Error parsing float: ", err)
+		}
 
 		// Parse date argument or default is today's date
 		var date string
@@ -33,20 +40,46 @@ var addCmd = &cobra.Command{
 			date = time.Now().Format("2006-01-02")
 		}
 
-
 		db, err := GetDBConnection()
 		if err != nil {
 			fmt.Println("Error: ", err)
 		}
 		defer db.Close()
 
+		totalAmount := calculateTotalAmount(quantity, unitPrice)
+		taxes := calculateTaxesFromTotalAmount(totalAmount)
+
 		// Execute the insert query
-		query := `INSERT INTO tblTransaction (id, stockNo, date, quantity, tranType, unitPrice) VALUES (?, ?, ?, ?, ?, ?)`
-		_, err = db.Exec(query, id, stockNo, date, quantity, tranType, unitPrice)
+		query := `INSERT INTO tblTransaction (id, stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		_, err = db.Exec(query, id, stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes)
 		if err != nil {
 			fmt.Println("Error: ", err)
 		} else {
 			fmt.Println("Pass: Stock added successfully!")
 		}
+
+		// Print out result
+		rows, err := db.Query(buildQueryByID(id))
+		if err != nil {
+			fmt.Println("Error querying database:", err)
+			return
+		}
+		defer rows.Close()
+
+		displayResults(rows)
 	},
+}
+
+func calculateTotalAmount(quantity int, unitPrice float64) float64 {
+	return float64(quantity) * unitPrice
+}
+
+func calculateTaxesFromQuantityAndPrice(quantity int, unitPrice float64) int {
+	var totalAmount float64 = calculateTotalAmount(quantity, unitPrice)
+	return calculateTaxesFromTotalAmount(totalAmount)
+}
+
+func calculateTaxesFromTotalAmount(totalAmount float64) int {
+	var taxRate float64 = 0.003
+	return int(totalAmount * taxRate)
 }
