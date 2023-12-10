@@ -20,7 +20,7 @@ import (
 
 const (
 	// hermInvestCli version
-	version = "v0.1.1" 
+	version = "v0.2.0" 
 )
 
 var stockCmd = &cobra.Command{
