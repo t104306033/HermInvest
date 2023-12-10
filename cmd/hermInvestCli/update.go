@@ -6,6 +6,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// 1. check input
+// 2. query transacation by id
+// 3. recalc total amount and taxes
+// 4. build sql syntax
+// 5. insert into sql
+// 6. print out result
+
 var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update stock",
