@@ -20,9 +20,15 @@ var addCmd = &cobra.Command{
 	Long:  `Add stock to the inventory`,
 	Args:  cobra.MinimumNArgs(5),
 	Run: func(cmd *cobra.Command, args []string) {
-		id := args[0]
+		id, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Println("Error parsing integer: ", err)
+		}
 		stockNo := args[1]
-		tranType := args[2]
+		tranType, err := strconv.Atoi(args[2])
+		if err != nil {
+			fmt.Println("Error parsing integer: ", err)
+		}
 		quantity, err := strconv.Atoi(args[3])
 		if err != nil {
 			fmt.Println("Error parsing integer: ", err)
@@ -35,14 +41,14 @@ var addCmd = &cobra.Command{
 		// Parse date argument or default is today's date
 		var date string
 		if len(args) > 5 {
-			date = args[5]
+			date = args[5] // check user input time format is correct
 		} else {
 			date = time.Now().Format("2006-01-02")
 		}
 
 		db, err := GetDBConnection()
 		if err != nil {
-			fmt.Println("Error: ", err)
+			fmt.Println("Error geting DB connection: ", err)
 		}
 		defer db.Close()
 

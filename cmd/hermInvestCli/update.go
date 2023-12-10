@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -23,8 +24,14 @@ var updateCmd = &cobra.Command{
 			return
 		}
 
-		transactionID := args[0]
-		unitPrice := args[1]
+		transactionID, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Println("Error parsing integer: ", err)
+		}
+		unitPrice, err := strconv.ParseFloat(args[1], 64)
+		if err != nil {
+			fmt.Println("Error parsing float: ", err)
+		}
 
 		db, err := GetDBConnection()
 		if err != nil {
