@@ -18,6 +18,11 @@ import (
 
 // stock
 
+const (
+	// hermInvestCli version
+	version = "v0.2.0" 
+)
+
 var stockCmd = &cobra.Command{
 	Use:   "stock",
 	Short: "Stock management",
@@ -35,7 +40,7 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("The version of hermInvestCli is v0.1.1")
+		fmt.Printf("hermInvestCli is %s\n", version)
 	},
 }
 

@@ -26,14 +26,14 @@ var queryCmd = &cobra.Command{
 		var query string
 
 		all, _ := cmd.Flags().GetBool("all")
-		id, _ := cmd.Flags().GetString("id")
+		id, _ := cmd.Flags().GetInt("id")
 		stockNo, _ := cmd.Flags().GetString("stockNo")
-		tranType, _ := cmd.Flags().GetString("type")
+		tranType, _ := cmd.Flags().GetInt("type")
 		date, _ := cmd.Flags().GetString("date")
 
 		if all {
 			query = buildQueryAll()
-		} else if id != "" {
+		} else if id != 0 {
 			query = buildQueryByID(id)
 		} else {
 			query = buildQueryByDetails(stockNo, tranType, date)
@@ -57,20 +57,20 @@ var queryCmd = &cobra.Command{
 }
 
 func buildQueryAll() string {
-	return fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction")
+	return fmt.Sprintln("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction")
 }
-func buildQueryByID(id string) string {
-	return fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction WHERE id = '%s'", id)
+func buildQueryByID(id int) string {
+	return fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = '%d'", id)
 }
 
-func buildQueryByDetails(stockNo, tranType, date string) string {
+func buildQueryByDetails(stockNo string, tranType int, date string) string {
 	var conditions []string
 
 	if stockNo != "" {
 		conditions = append(conditions, fmt.Sprintf("stockNo = '%s'", stockNo))
 	}
-	if tranType != "" {
-		conditions = append(conditions, fmt.Sprintf("tranType = '%s'", tranType))
+	if tranType != 0 {
+		conditions = append(conditions, fmt.Sprintf("tranType = '%d'", tranType))
 	}
 	if date != "" {
 		conditions = append(conditions, fmt.Sprintf("date = '%s'", date))
@@ -78,7 +78,7 @@ func buildQueryByDetails(stockNo, tranType, date string) string {
 
 	var query string
 	if len(conditions) > 0 {
-		query = fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
+		query = fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
 	} else {
 		query = "SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction"
 	}
@@ -87,6 +87,7 @@ func buildQueryByDetails(stockNo, tranType, date string) string {
 }
 
 func displayResults(rows *sql.Rows) {
+	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
 	for rows.Next() {
 		var id int
 		var stockNo string
@@ -94,22 +95,22 @@ func displayResults(rows *sql.Rows) {
 		var tranType, quantity int
 		var unitPrice float64
 		// var date string
-		// var totalAmount, taxes int
+		var totalAmount, taxes int
 
-		if err := rows.Scan(&id, &stockNo, &tranType, &quantity, &unitPrice); err != nil {
+		err := rows.Scan(&id, &stockNo, &tranType, &quantity, &unitPrice, &totalAmount, &taxes)
+		if err != nil {
 			fmt.Println("Error scanning row:", err)
 			return
 		}
 
-		fmt.Printf("ID: %d, Stock No: %s, Type: %d, Quantity: %d, Unit Price: %.2f\n", id, stockNo, tranType, quantity, unitPrice)
-
+		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes)
 	}
 }
 
 func init() {
 	queryCmd.Flags().Bool("all", false, "query all. indepent")
-	queryCmd.Flags().String("id", "", "query by id. indepent")
+	queryCmd.Flags().Int("id", 0, "query by id. indepent")
 	queryCmd.Flags().String("stockNo", "", "Stock number")
-	queryCmd.Flags().String("type", "", "Type")
+	queryCmd.Flags().Int("type", 0, "Type")
 	queryCmd.Flags().String("date", "", "Date")
 }
