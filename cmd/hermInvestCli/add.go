@@ -42,12 +42,17 @@ var addCmd = &cobra.Command{
 			return
 		}
 
-		// Parse date argument or default is today's date
 		var date string
 		if len(args) > 5 {
-			date = args[5] // check user input time format is correct
+			// check user input time format is correct
+			parsedTime, err := time.Parse(time.DateOnly, args[5])
+			if err != nil {
+				fmt.Println("Error parsing date: ", err)
+				return
+			}
+			date = parsedTime.Format(time.DateOnly)
 		} else {
-			date = time.Now().Format("2006-01-02")
+			date = time.Now().Format(time.DateOnly)
 		}
 
 		t := NewTransactionFromUserInput(id, stockNo, date, quantity, tranType, unitPrice)
