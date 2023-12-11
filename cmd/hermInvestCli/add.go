@@ -23,19 +23,23 @@ var addCmd = &cobra.Command{
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
 			fmt.Println("Error parsing integer: ", err)
+			return
 		}
 		stockNo := args[1]
 		tranType, err := strconv.Atoi(args[2])
 		if err != nil {
 			fmt.Println("Error parsing integer: ", err)
+			return
 		}
 		quantity, err := strconv.Atoi(args[3])
 		if err != nil {
 			fmt.Println("Error parsing integer: ", err)
+			return
 		}
 		unitPrice, err := strconv.ParseFloat(args[4], 64)
 		if err != nil {
 			fmt.Println("Error parsing float: ", err)
+			return
 		}
 
 		// Parse date argument or default is today's date
