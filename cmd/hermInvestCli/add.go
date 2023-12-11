@@ -46,18 +46,17 @@ var addCmd = &cobra.Command{
 			date = time.Now().Format("2006-01-02")
 		}
 
+		t := NewTransactionFromUserInput(id, stockNo, date, quantity, tranType, unitPrice)
+
 		db, err := GetDBConnection()
 		if err != nil {
 			fmt.Println("Error geting DB connection: ", err)
 		}
 		defer db.Close()
 
-		totalAmount := calculateTotalAmount(quantity, unitPrice)
-		taxes := calculateTaxesFromTotalAmount(totalAmount)
-
 		// Execute the insert query
 		query := `INSERT INTO tblTransaction (id, stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-		_, err = db.Exec(query, id, stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes)
+		_, err = db.Exec(query, t.id, t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
 		if err != nil {
 			fmt.Println("Error: ", err)
 		} else {
@@ -74,18 +73,4 @@ var addCmd = &cobra.Command{
 
 		displayResults(rows)
 	},
-}
-
-func calculateTotalAmount(quantity int, unitPrice float64) float64 {
-	return float64(quantity) * unitPrice
-}
-
-func calculateTaxesFromQuantityAndPrice(quantity int, unitPrice float64) int {
-	var totalAmount float64 = calculateTotalAmount(quantity, unitPrice)
-	return calculateTaxesFromTotalAmount(totalAmount)
-}
-
-func calculateTaxesFromTotalAmount(totalAmount float64) int {
-	var taxRate float64 = 0.003
-	return int(totalAmount * taxRate)
 }
