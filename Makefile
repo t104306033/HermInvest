@@ -1,3 +1,5 @@
+SHELL := /bin/bash # For Completion Now
+
 # Go parameters
 GOCMD=go
 GOTEST=$(GOCMD) test
@@ -13,6 +15,11 @@ BIN_NAME=hermInvestCli
 DB=./internal/app/database/dev-database.db
 CREATE_DB_CMD=./cmd/internal/createDBSchema/createDBSchema.go
 SEED_DATA_CMD=./cmd/internal/seedSampleData/seedSampleData.go
+
+# Completion
+WORKING_DIR=$(shell pwd)
+GENERATE_COMPLETION=$(WORKING_DIR)/$(BIN_NAME) completion bash --no-descriptions
+BASH_COMPLETION_DIR=/usr/share/bash-completion/completions
 
 # Detect the OS
 ifeq ($(OS),Windows_NT)     # is Windows_NT on XP, 2000, 7, Vista, 10...
@@ -56,3 +63,8 @@ $(DB):
 	@echo "DB $(DB) does not exist"
 	$(GORUN) $(CREATE_DB_CMD)
 	$(GORUN) $(SEED_DATA_CMD)
+
+# sudo required
+completion:
+	$(GENERATE_COMPLETION) > $(BASH_COMPLETION_DIR)/$(BIN_NAME)
+	source $(BASH_COMPLETION_DIR)/$(BIN_NAME)
