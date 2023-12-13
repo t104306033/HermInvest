@@ -9,13 +9,21 @@ import (
 )
 
 var queryCmd = &cobra.Command{
-	Use:   "query",
-	Short: "Query stock",
-	Long: `Query stock information from the inventory based on transaction ID, stock number, type, or date.
+	Use:   `query {--all | --id <ID> | [--stockNo <StockNumber> --type <Type> --date <Date>]}`,
+	Short: "Query stock (Transaction ID, Stock No., Type, or Date)",
+	Example: "" +
+		"  - Query by Transaction ID:\n" +
+		"    hermInvestCli stock query --id 11\n\n" +
 
-	Usage:
-	  hermInvestCli stock query [stock number] [type] [date] [flags]
-	  hermInvestCli stock query byID [transaction ID] [flags]`,
+		"  - Query all records:\n" +
+		"    hermInvestCli stock query --all\n\n" +
+
+		"  - Query by stock number:\n" +
+		"    hermInvestCli stock query --stockNo 0050\n\n" +
+
+		"  - Query by stock number, type, and date:\n" +
+		"    hermInvestCli stock query --stockNo 0050 --type 1 --date 2023-12-01",
+	Long: "Query stock by transaction ID, stock number, type, or date.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if cmd.Flags().NFlag() == 0 && len(args) == 0 {
 			fmt.Println("No args and no flags provided.")
@@ -108,8 +116,8 @@ func displayResults(rows *sql.Rows) {
 }
 
 func init() {
-	queryCmd.Flags().Bool("all", false, "query all. indepent")
-	queryCmd.Flags().Int("id", 0, "query by id. indepent")
+	queryCmd.Flags().Bool("all", false, "Query all records")
+	queryCmd.Flags().Int("id", 0, "Query by ID")
 	queryCmd.Flags().String("stockNo", "", "Stock number")
 	queryCmd.Flags().Int("type", 0, "Type")
 	queryCmd.Flags().String("date", "", "Date")
