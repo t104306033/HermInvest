@@ -11,12 +11,16 @@ import (
 )
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Delete stock",
-	Long:  `Delete stock from the inventory by providing the transaction ID`,
+	Use:   "delete id",
+	Short: "Delete stock by transaction ID",
+	Example: "" +
+		"  - Delete by ID:\n" +
+		"    hermInvestCli stock delete 11",
+	Long: `Delete stock from the inventory by providing the stock transaction ID`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			fmt.Println("Please provide the transaction ID to delete.")
+			cmd.Help()
 			return
 		}
 
