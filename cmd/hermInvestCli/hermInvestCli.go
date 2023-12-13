@@ -63,6 +63,7 @@ func init() {
 	stockCmd.AddCommand(deleteCmd)
 	stockCmd.AddCommand(updateCmd)
 	stockCmd.AddCommand(queryCmd)
+	stockCmd.AddCommand(importCmd)
 }
 
 func main() {
