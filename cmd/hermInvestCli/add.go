@@ -16,9 +16,15 @@ import (
 
 var addCmd = &cobra.Command{
 	Use:   "add id stockNo type quantity unitPrice [date]",
-	Short: "Add stock",
-	Long:  `Add stock to the inventory`,
-	Args:  cobra.MinimumNArgs(5),
+	Short: "Add stock (ID, Stock No., Type, Quantity, Unit Price)",
+	Example: "" +
+		"  - Purchase at today's date:\n" +
+		"    hermInvestCli stock add 11 0050 1 1500 23.5\n\n" +
+
+		"  - Sale on a specific date:\n" +
+		"    hermInvestCli stock add 11 0050 1 1500 23.5 2023-12-01",
+	Long: `Add stock by transaction ID, stock number, type, quantity, and unit price`,
+	Args: cobra.MinimumNArgs(5),
 	Run: func(cmd *cobra.Command, args []string) {
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
