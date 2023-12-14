@@ -32,13 +32,19 @@ var importCmd = &cobra.Command{
 		skipHeader, _ := cmd.Flags().GetBool("skipHeader")
 		filePath := args[0]
 
-		// check input is file
-		// check file path exist and not a dir
-		fileInfo, err := os.Stat(filePath) // os.Open also seems to have Stat()
-		if os.IsNotExist(err) {
-			fmt.Println("Error filePath not exist: ", err)
+		// check file path exist
+		fileInfo, err := os.Stat(filePath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Println("Error filePath not exist: ", err)
+			} else {
+				fmt.Println("Error getting file info: ", err)
+			}
 			return
-		} else if fileInfo.IsDir() {
+		}
+
+		// check it is not a dir
+		if fileInfo.IsDir() {
 			fmt.Println("Error filePath is not a file.")
 			return
 		}
