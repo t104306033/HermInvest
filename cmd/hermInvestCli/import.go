@@ -32,29 +32,21 @@ var importCmd = &cobra.Command{
 		skipHeader, _ := cmd.Flags().GetBool("skipHeader")
 		filePath := args[0]
 
-		// check file path exist
-		fileInfo, err := os.Stat(filePath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				fmt.Println("Error filePath not exist: ", err)
-			} else {
-				fmt.Println("Error getting file info: ", err)
-			}
-			return
-		}
-
-		// check it is not a dir
-		if fileInfo.IsDir() {
-			fmt.Println("Error filePath is not a file.")
-			return
-		}
-
+		// need testcase check file path exist
+		// need testcase check file permission
 		file, err := os.Open(filePath)
 		if err != nil {
 			fmt.Println("Error opening the file: ", err)
 			return
 		}
 		defer file.Close()
+
+		// need testcase check it is not a dir
+		fileInfo, _ := file.Stat()
+		if fileInfo.IsDir() {
+			fmt.Println("Error filePath is not a file.")
+			return
+		}
 
 		fileReader := csv.NewReader(file)
 
