@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,6 @@ import (
 // 4. insert into sql
 // 5. success
 
-// TODO: ignore header (first line)
 // TODO: select stockNo, quantity ... from csv
 // TODO: column format
 
@@ -29,6 +29,7 @@ var importCmd = &cobra.Command{
 		"Please check your csv file has column stockNo type quantity unitPrice.",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		skipHeader, _ := cmd.Flags().GetBool("skipHeader")
 		filePath := args[0]
 
 		// check input is file
@@ -51,14 +52,30 @@ var importCmd = &cobra.Command{
 
 		fileReader := csv.NewReader(file)
 
+		if skipHeader {
+			_, err := fileReader.Read()
+			if err != nil {
+				if err == io.EOF {
+					fmt.Println("Error file empty.")
+				} else {
+					fmt.Println("Error reading header: ", err)
+				}
+				return
+			}
+		}
+
 		rows, err := fileReader.ReadAll()
 		if err != nil {
-			fmt.Println("Error reading rows: ")
+			fmt.Println("Error reading rows: ", err)
 			return
 		}
 
 		for _, row := range rows {
-			fmt.Println(row[0])
+			fmt.Println(row)
 		}
 	},
+}
+
+func init() {
+	importCmd.Flags().Bool("skipHeader", false, "Ignore header in CSV")
 }
