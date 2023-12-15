@@ -56,7 +56,7 @@ var addCmd = &cobra.Command{
 			date = time.Now().Format(time.DateOnly)
 		}
 
-		t := NewTransactionFromUserInput(0, stockNo, date, quantity, tranType, unitPrice)
+		t := NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
 
 		db, err := GetDBConnection()
 		if err != nil {

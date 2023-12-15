@@ -28,11 +28,9 @@ func NewTransactionFromDB(
 }
 
 // New Transaction From User Input
-func NewTransactionFromUserInput(
-	id int, stockNo string, date string, quantity int, tranType int,
-	unitPrice float64) *Transaction {
+func NewTransactionFromInput(
+	stockNo string, date string, quantity int, tranType int, unitPrice float64) *Transaction {
 	t := &Transaction{
-		id:        id,
 		stockNo:   stockNo,
 		date:      date,
 		quantity:  quantity,
