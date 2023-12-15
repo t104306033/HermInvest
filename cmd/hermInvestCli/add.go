@@ -40,6 +40,7 @@ var addCmd = &cobra.Command{
 
 		// init transactionRepository
 		repo := &transactionRepository{db: db}
+
 		t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
 		id, err := repo.createTransaction(t)
 		if err != nil {

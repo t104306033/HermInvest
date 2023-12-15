@@ -15,7 +15,6 @@ import (
 // 4. insert into sql
 // 5. success
 
-// TODO: select stockNo, quantity ... from csv
 // TODO: column format
 
 var importCmd = &cobra.Command{
@@ -68,8 +67,38 @@ var importCmd = &cobra.Command{
 			return
 		}
 
+		db, err := GetDBConnection()
+		if err != nil {
+			fmt.Println("Error geting DB connection: ", err)
+		}
+		defer db.Close()
+
+		// init transactionRepository
+		repo := &transactionRepository{db: db}
+
 		for _, row := range rows {
-			fmt.Println(row)
+			// TODO: select stockNo, quantity ... from csv (swap row)
+			stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(row)
+			if err != nil {
+				fmt.Println("Error parsing transaction data:", err)
+				return
+			}
+
+			t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+			// TODO: create Transactions, bulk insert?
+			id, err := repo.createTransaction(t)
+			if err != nil {
+				fmt.Println("Error creating transaction: ", err)
+			}
+
+			// Bool control show result or not
+			transactions, err := repo.queryTransactionByID(id)
+			if err != nil {
+				fmt.Println("Error querying database:", err)
+			}
+
+			// Print out result
+			displayResults(transactions)
 		}
 	},
 }
