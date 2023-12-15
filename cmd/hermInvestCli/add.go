@@ -16,9 +16,15 @@ import (
 
 var addCmd = &cobra.Command{
 	Use:   "add id stockNo type quantity unitPrice [date]",
-	Short: "Add stock",
-	Long:  `Add stock to the inventory`,
-	Args:  cobra.MinimumNArgs(5),
+	Short: "Add stock (ID, Stock No., Type, Quantity, Unit Price)",
+	Example: "" +
+		"  - Purchase at today's date:\n" +
+		"    hermInvestCli stock add 11 0050 1 1500 23.5\n\n" +
+
+		"  - Sale on a specific date:\n" +
+		"    hermInvestCli stock add 11 0050 1 1500 23.5 2023-12-01",
+	Long: `Add stock by transaction ID, stock number, type, quantity, and unit price`,
+	Args: cobra.MinimumNArgs(5),
 	Run: func(cmd *cobra.Command, args []string) {
 		id, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -42,12 +48,17 @@ var addCmd = &cobra.Command{
 			return
 		}
 
-		// Parse date argument or default is today's date
 		var date string
 		if len(args) > 5 {
-			date = args[5] // check user input time format is correct
+			// check user input time format is correct
+			parsedTime, err := time.Parse(time.DateOnly, args[5])
+			if err != nil {
+				fmt.Println("Error parsing date: ", err)
+				return
+			}
+			date = parsedTime.Format(time.DateOnly)
 		} else {
-			date = time.Now().Format("2006-01-02")
+			date = time.Now().Format(time.DateOnly)
 		}
 
 		t := NewTransactionFromUserInput(id, stockNo, date, quantity, tranType, unitPrice)

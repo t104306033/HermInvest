@@ -15,12 +15,16 @@ import (
 // 6. print out result
 
 var updateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Update stock",
-	Long:  `Update stock information, including unit price, in the inventory using the transaction ID`,
+	Use:   "update id unitPrice",
+	Short: "Update unit price by transaction ID",
+	Example: "" +
+		"  - Update unit Price by ID:\n" +
+		"    hermInvestCli stock update 11 20.3",
+	Long: `Update the unit price of stock in the inventory using the transaction ID.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
 			fmt.Println("Please provide transaction ID and unit price")
+			cmd.Help()
 			return
 		}
 

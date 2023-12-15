@@ -16,17 +16,16 @@ import (
 // 5. Update the documentation.
 // 6. Revisit CLI interface design for enhancements.
 
-// stock
-
 const (
 	// hermInvestCli version
-	version = "v0.2.0" 
+	version = "v0.2.5"
 )
 
+// stock
 var stockCmd = &cobra.Command{
 	Use:   "stock",
 	Short: "Stock management",
-	Long:  `Manage stock via HermInestCli`,
+	Long:  `Manage the stock inventory via HermInvestCli.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// if input is incorrect, show error and guide what to do
 		// else if input is empty, show help
@@ -47,9 +46,8 @@ var versionCmd = &cobra.Command{
 // root
 
 var rootCmd = &cobra.Command{
-	Use:   "hermInvestCli",
-	Short: "Oparate stock inventoy table", // working?
-	Long:  `Oparate stock inventoy table for long desc`,
+	Use:  "hermInvestCli",
+	Long: "Operate on the stock inventory for detailed management.",
 	Run: func(cmd *cobra.Command, args []string) {
 		// if input is incorrect, show error and guide what to do
 		// else if input is empty, show help
@@ -65,6 +63,7 @@ func init() {
 	stockCmd.AddCommand(deleteCmd)
 	stockCmd.AddCommand(updateCmd)
 	stockCmd.AddCommand(queryCmd)
+	stockCmd.AddCommand(importCmd)
 }
 
 func main() {
