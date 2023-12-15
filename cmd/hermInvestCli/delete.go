@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"database/sql"
 	"fmt"
 	"os"
 	"strconv"
@@ -32,13 +31,16 @@ var deleteCmd = &cobra.Command{
 
 		db, err := GetDBConnection()
 		if err != nil {
-			fmt.Println("Error: ", err)
+			fmt.Println("Error geting DB connection: ", err)
 		}
 		defer db.Close()
 
+		// init transactionRepository
+		repo := &transactionRepository{db: db}
+
 		confirm := confirmDeletion()
 		if confirm {
-			err = deleteTransaction(db, id)
+			err = repo.deleteTransaction(id)
 			if err != nil {
 				fmt.Println("Error deleting transaction:", err)
 				return
@@ -61,9 +63,4 @@ func confirmDeletion() bool {
 
 func trimNewline(s string) string {
 	return s[:len(s)-1]
-}
-
-func deleteTransaction(db *sql.DB, id int) error {
-	_, err := db.Exec("DELETE FROM tblTransaction WHERE id = ?", id)
-	return err
 }
