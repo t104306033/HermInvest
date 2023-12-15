@@ -112,6 +112,12 @@ func (repo *transactionRepository) queryTransactionByDetails(stockNo string, tra
 	return transactions, nil
 }
 
+// updateTransaction
+func (repo *transactionRepository) updateTransaction(t *Transaction) error {
+	_, err := repo.db.Exec("UPDATE tblTransaction SET unitPrice = ?, totalAmount = ?, taxes = ? WHERE id = ?", t.unitPrice, t.totalAmount, t.taxes, t.id)
+	return err
+}
+
 // deleteTransaction
 func (repo *transactionRepository) deleteTransaction(id int) error {
 	_, err := repo.db.Exec("DELETE FROM tblTransaction WHERE id = ?", id)

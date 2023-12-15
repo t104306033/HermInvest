@@ -39,20 +39,33 @@ var updateCmd = &cobra.Command{
 
 		db, err := GetDBConnection()
 		if err != nil {
-			fmt.Println("Error: ", err)
+			fmt.Println("Error geting DB connection: ", err)
 		}
 		defer db.Close()
 
-		// TODO: Recalculate totalAmount, taxes
+		// init transactionRepository
+		repo := &transactionRepository{db: db}
+
+		transactions, err := repo.queryTransactionByID(transactionID)
+		if err != nil {
+			fmt.Println("Error querying database:", err)
+		}
+
 		// TODO: check update work. ex: update a fake transaction ID to db
-		// Execute update query
-		query := "UPDATE tblTransaction SET unitPrice = ? WHERE id = ?"
-		_, err = db.Exec(query, unitPrice, transactionID)
+		t := transactions[0]
+		t.unitPrice = unitPrice // update unit Price
+
+		// Recalculate
+		t.calculateTotalAmount()
+		t.calculateTaxesFromTotalAmount()
+
+		// update db
+		err = repo.updateTransaction(t)
 		if err != nil {
 			fmt.Println("Error updating stock information:", err)
 			return
 		}
 
-		fmt.Printf("Successfully updated transaction ID %s with new unit price %s\n", transactionID, unitPrice)
+		fmt.Printf("Successfully updated transaction ID %d with new unit price %.2f\n", t.id, t.unitPrice)
 	},
 }
