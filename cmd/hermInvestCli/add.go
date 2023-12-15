@@ -56,31 +56,22 @@ var addCmd = &cobra.Command{
 			date = time.Now().Format(time.DateOnly)
 		}
 
-		t := NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
-
 		db, err := GetDBConnection()
 		if err != nil {
 			fmt.Println("Error geting DB connection: ", err)
 		}
 		defer db.Close()
 
-		// Execute the insert query
-		query := `INSERT INTO tblTransaction (stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes) VALUES (?, ?, ?, ?, ?, ?, ?)`
-		insertResult, err := db.Exec(query, t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
+		// init transactionRepository
+		repo := &transactionRepository{db: db}
+		t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+		id, err := repo.createTransaction(t)
 		if err != nil {
-			fmt.Println("Error: ", err)
-		} else {
-			fmt.Println("Pass: Stock added successfully!")
-		}
-
-		insertedID, err := insertResult.LastInsertId()
-		if err != nil {
-			fmt.Println("Error getting insertedID: ", err)
-			return
+			fmt.Println("Error creating transaction: ", err)
 		}
 
 		// Print out result
-		rows, err := db.Query(buildQueryByID(int(insertedID)))
+		rows, err := db.Query(buildQueryByID(int(id)))
 		if err != nil {
 			fmt.Println("Error querying database:", err)
 			return
