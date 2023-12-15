@@ -22,38 +22,14 @@ var addCmd = &cobra.Command{
 		"    hermInvestCli stock add 0050 1 1500 23.5\n\n" +
 
 		"  - Sale on a specific date:\n" +
-		"    hermInvestCli stock add 0050 -1 1500 23.5 2023-12-01",
+		"    hermInvestCli stock add -- 0050 -1 1500 23.5 2023-12-01",
 	Long: `Add stock by transaction stock number, type, quantity, and unit price`,
 	Args: cobra.MinimumNArgs(4),
 	Run: func(cmd *cobra.Command, args []string) {
-		stockNo := args[0] // regex a-z 0-9
-		tranType, err := strconv.Atoi(args[1])
+		stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(args)
 		if err != nil {
-			fmt.Println("Error parsing integer: ", err)
+			fmt.Println("Error parsing transaction data:", err)
 			return
-		}
-		quantity, err := strconv.Atoi(args[2])
-		if err != nil {
-			fmt.Println("Error parsing integer: ", err)
-			return
-		}
-		unitPrice, err := strconv.ParseFloat(args[3], 64)
-		if err != nil {
-			fmt.Println("Error parsing float: ", err)
-			return
-		}
-
-		var date string
-		if len(args) > 4 {
-			// check user input time format is correct
-			parsedTime, err := time.Parse(time.DateOnly, args[4])
-			if err != nil {
-				fmt.Println("Error parsing date: ", err)
-				return
-			}
-			date = parsedTime.Format(time.DateOnly)
-		} else {
-			date = time.Now().Format(time.DateOnly)
 		}
 
 		db, err := GetDBConnection()
@@ -79,4 +55,36 @@ var addCmd = &cobra.Command{
 		displayResults(transactions)
 
 	},
+}
+
+func ParseTransactionForAddCmd(args []string) (string, int, int, float64, string, error) {
+	stockNo := args[0] // regex a-z 0-9
+
+	tranType, err := strconv.Atoi(args[1])
+	if err != nil {
+		return "", 0, 0, 0, "", fmt.Errorf("error parsing integer: %s", err)
+	}
+
+	quantity, err := strconv.Atoi(args[2])
+	if err != nil {
+		return "", 0, 0, 0, "", fmt.Errorf("error parsing integer: %s", err)
+	}
+
+	unitPrice, err := strconv.ParseFloat(args[3], 64)
+	if err != nil {
+		return "", 0, 0, 0, "", fmt.Errorf("error parsing float: %s", err)
+	}
+
+	var date string
+	if len(args) > 4 {
+		parsedTime, err := time.Parse(time.DateOnly, args[4])
+		if err != nil {
+			return "", 0, 0, 0, "", fmt.Errorf("error parsing date: %s", err)
+		}
+		date = parsedTime.Format(time.DateOnly)
+	} else {
+		date = time.Now().Format(time.DateOnly)
+	}
+
+	return stockNo, tranType, quantity, unitPrice, date, nil
 }
