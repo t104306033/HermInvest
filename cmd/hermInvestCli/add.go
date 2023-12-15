@@ -70,15 +70,13 @@ var addCmd = &cobra.Command{
 			fmt.Println("Error creating transaction: ", err)
 		}
 
-		// Print out result
-		rows, err := db.Query(buildQueryByID(int(id)))
+		transactions, err := repo.queryTransactionByID(id)
 		if err != nil {
 			fmt.Println("Error querying database:", err)
-			return
 		}
-		defer rows.Close()
 
-		displayResults(rows)
+		// Print out result
+		displayResults(transactions)
 
 	},
 }
