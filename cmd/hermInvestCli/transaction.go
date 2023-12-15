@@ -12,7 +12,7 @@ type Transaction struct {
 }
 
 // New Transaction From DB
-func NewTransactionFromDB(
+func newTransactionFromDB(
 	id int, stockNo string, date string, quantity int, tranType int,
 	unitPrice float64, totalAmount int, taxes int) *Transaction {
 	return &Transaction{
@@ -28,11 +28,9 @@ func NewTransactionFromDB(
 }
 
 // New Transaction From User Input
-func NewTransactionFromUserInput(
-	id int, stockNo string, date string, quantity int, tranType int,
-	unitPrice float64) *Transaction {
+func newTransactionFromInput(
+	stockNo string, date string, quantity int, tranType int, unitPrice float64) *Transaction {
 	t := &Transaction{
-		id:        id,
 		stockNo:   stockNo,
 		date:      date,
 		quantity:  quantity,

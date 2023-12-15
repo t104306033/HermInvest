@@ -1,9 +1,7 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -31,87 +29,42 @@ var queryCmd = &cobra.Command{
 			return
 		}
 
-		var query string
-
 		all, _ := cmd.Flags().GetBool("all")
 		id, _ := cmd.Flags().GetInt("id")
 		stockNo, _ := cmd.Flags().GetString("stockNo")
 		tranType, _ := cmd.Flags().GetInt("type")
 		date, _ := cmd.Flags().GetString("date")
 
-		if all {
-			query = buildQueryAll()
-		} else if id != 0 {
-			query = buildQueryByID(id)
-		} else {
-			query = buildQueryByDetails(stockNo, tranType, date)
-		}
-
 		db, err := GetDBConnection()
 		if err != nil {
-			fmt.Println("Error: ", err)
+			fmt.Println("Error geting DB connection: ", err)
 		}
 		defer db.Close()
 
-		rows, err := db.Query(query)
-		if err != nil {
-			fmt.Println("Error querying database:", err)
-			return
-		}
-		defer rows.Close()
+		// init transactionRepository
+		repo := &transactionRepository{db: db}
 
-		displayResults(rows)
+		var transactions []*Transaction
+		var transactionsErr error
+		if all {
+			transactions, transactionsErr = repo.queryTransactionAll()
+		} else if id != 0 {
+			transactions, transactionsErr = repo.queryTransactionByID(id)
+		} else {
+			transactions, transactionsErr = repo.queryTransactionByDetails(stockNo, tranType, date)
+		}
+		if transactionsErr != nil {
+			fmt.Println("Error querying database:", transactionsErr)
+		}
+
+		displayResults(transactions)
 	},
 }
 
-func buildQueryAll() string {
-	return fmt.Sprintln("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction")
-}
-func buildQueryByID(id int) string {
-	return fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = '%d'", id)
-}
-
-func buildQueryByDetails(stockNo string, tranType int, date string) string {
-	var conditions []string
-
-	if stockNo != "" {
-		conditions = append(conditions, fmt.Sprintf("stockNo = '%s'", stockNo))
-	}
-	if tranType != 0 {
-		conditions = append(conditions, fmt.Sprintf("tranType = '%d'", tranType))
-	}
-	if date != "" {
-		conditions = append(conditions, fmt.Sprintf("date = '%s'", date))
-	}
-
-	var query string
-	if len(conditions) > 0 {
-		query = fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
-	} else {
-		query = "SELECT id, stockNo, tranType, quantity, unitPrice FROM tblTransaction"
-	}
-
-	return query
-}
-
-func displayResults(rows *sql.Rows) {
+func displayResults(transactions []*Transaction) {
 	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
-	for rows.Next() {
-		var id int
-		var stockNo string
-		// var stockName string
-		var tranType, quantity int
-		var unitPrice float64
-		// var date string
-		var totalAmount, taxes int
-
-		err := rows.Scan(&id, &stockNo, &tranType, &quantity, &unitPrice, &totalAmount, &taxes)
-		if err != nil {
-			fmt.Println("Error scanning row:", err)
-			return
-		}
-
-		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes)
+	for _, t := range transactions {
+		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.id, t.stockNo, t.tranType, t.quantity, t.unitPrice, t.totalAmount, t.taxes)
 	}
 }
 

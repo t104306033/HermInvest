@@ -34,7 +34,7 @@ func main() {
 	// Create tblTransaction table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS tblTransaction (
-			id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+			id INTEGER UNIQUE,
 			stockNo TEXT NOT NULL,
 			date TEXT,
 			quantity INTEGER NOT NULL,
@@ -42,7 +42,7 @@ func main() {
 			unitPrice REAL NOT NULL,
 			totalAmount INTEGER,
 			taxes INTEGER,
-			FOREIGN KEY(stockNo) REFERENCES tblStockMapping(stockNo)
+			PRIMARY KEY("id" AUTOINCREMENT)
 		)
 	`)
 	if err != nil {

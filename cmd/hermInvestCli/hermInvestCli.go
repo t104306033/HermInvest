@@ -18,7 +18,7 @@ import (
 
 const (
 	// hermInvestCli version
-	version = "v0.2.5"
+	version = "v0.2.10"
 )
 
 // stock
