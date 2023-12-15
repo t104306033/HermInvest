@@ -22,14 +22,10 @@ var addCmd = &cobra.Command{
 		"    hermInvestCli stock add 0050 1 1500 23.5\n\n" +
 
 		"  - Sale on a specific date:\n" +
-		"    hermInvestCli stock add 0050 -1 1500 23.5 2023-12-01\n\n" +
-
-		"  - Purchase on a specific date assign id:\n" +
-		"    hermInvestCli stock add --id 33 0050 1 1500 23.5 2023-12-01",
+		"    hermInvestCli stock add 0050 -1 1500 23.5 2023-12-01",
 	Long: `Add stock by transaction stock number, type, quantity, and unit price`,
 	Args: cobra.MinimumNArgs(4),
 	Run: func(cmd *cobra.Command, args []string) {
-		id, _ := cmd.Flags().GetInt("id")
 		stockNo := args[0] // regex a-z 0-9
 		tranType, err := strconv.Atoi(args[1])
 		if err != nil {
@@ -60,7 +56,7 @@ var addCmd = &cobra.Command{
 			date = time.Now().Format(time.DateOnly)
 		}
 
-		t := NewTransactionFromUserInput(id, stockNo, date, quantity, tranType, unitPrice)
+		t := NewTransactionFromUserInput(0, stockNo, date, quantity, tranType, unitPrice)
 
 		db, err := GetDBConnection()
 		if err != nil {
@@ -69,36 +65,29 @@ var addCmd = &cobra.Command{
 		defer db.Close()
 
 		// Execute the insert query
-		if id != 0 {
-			query := `INSERT INTO tblTransaction (id, stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-			_, err = db.Exec(query, t.id, t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
-			if err != nil {
-				fmt.Println("Error: ", err)
-			} else {
-				fmt.Println("Pass: Stock added successfully!")
-			}
-
-			// Print out result
-			rows, err := db.Query(buildQueryByID(id))
-			if err != nil {
-				fmt.Println("Error querying database:", err)
-				return
-			}
-			defer rows.Close()
-
-			displayResults(rows)
+		query := `INSERT INTO tblTransaction (stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes) VALUES (?, ?, ?, ?, ?, ?, ?)`
+		insertResult, err := db.Exec(query, t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
+		if err != nil {
+			fmt.Println("Error: ", err)
 		} else {
-			query := `INSERT INTO tblTransaction (stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes) VALUES (?, ?, ?, ?, ?, ?, ?)`
-			_, err = db.Exec(query, t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
-			if err != nil {
-				fmt.Println("Error: ", err)
-			} else {
-				fmt.Println("Pass: Stock added successfully!")
-			}
+			fmt.Println("Pass: Stock added successfully!")
 		}
-	},
-}
 
-func init() {
-	addCmd.Flags().Int("id", 0, "Add by ID")
+		insertedID, err := insertResult.LastInsertId()
+		if err != nil {
+			fmt.Println("Error getting insertedID: ", err)
+			return
+		}
+
+		// Print out result
+		rows, err := db.Query(buildQueryByID(int(insertedID)))
+		if err != nil {
+			fmt.Println("Error querying database:", err)
+			return
+		}
+		defer rows.Close()
+
+		displayResults(rows)
+
+	},
 }
