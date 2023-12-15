@@ -8,7 +8,7 @@ import (
 func GetDBConnection() (*sql.DB, error) {
 	// TODO: extract DB connection to configuration
 	// sqlite3 connection with foreign keys enabled
-	var dbPath = "./internal/app/database/dev-database.db?_foreign_keys=true"
+	var dbPath = "./internal/app/database/dev-database.db"
 
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
