@@ -105,11 +105,11 @@ func TestSwapColumn(t *testing.T) {
 			// t.Parallel()
 			got, err := swapColumn(tt.args.row, tt.args.indexes)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("swapColumn() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("swapColumn(%v, %v) error = %v, wantErr %v", tt.args.row, tt.args.indexes, err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("swapColumn() = %v, want %v", got, tt.want)
+				t.Errorf("swapColumn(%v, %v) = %v, want %v", tt.args.row, tt.args.indexes, got, tt.want)
 			}
 		})
 	}
