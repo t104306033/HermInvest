@@ -127,13 +127,6 @@ func init() {
 	importCmd.Flags().String("swapColumn", "", "Swap column")
 }
 
-// assume row length is 5
-// fmt.Println(swapColumn(row, ""))        // error
-// fmt.Println(swapColumn(row, "0,1,2,3")) // pass row[2], row[3], row[2], row[3], row[4]
-// fmt.Println(swapColumn(row, "0,1,3,2")) // pass row[0], row[1], row[3], row[2], row[4]
-// fmt.Println(swapColumn(row, "3,0,1,2")) // pass row[3], row[0], row[1], row[2], row[4]
-// fmt.Println(swapColumn(row, "3,0,1,6")) // index '6' is out of range
-// fmt.Println(swapColumn(row, "1")) 	   // swap row[1], row[1], row[2], row[3], row[4]
 func swapColumn(row []string, indexes string) ([]string, error) {
 	if indexes == "" {
 		return row, errors.New("indexes cannot be empty")
