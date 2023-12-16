@@ -90,10 +90,12 @@ var importCmd = &cobra.Command{
 		}
 
 		// TODO: create Transactions, bulk insert? Finally, I choose begin a db transaction
-		err = repo.createTransactions(transactions)
+		ids, err := repo.createTransactions(transactions)
 		if err != nil {
 			fmt.Println("Error creating transaction: ", err)
 		}
+
+		fmt.Println("inserted ids:", ids)
 
 		// 	// Bool control show result or not
 		// 	transactions, err := repo.queryTransactionByID(id)
