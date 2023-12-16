@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -22,14 +25,18 @@ var importCmd = &cobra.Command{
 	Short: "Import stock from csv file",
 	Example: "" +
 		"  - Import stock from file:\n" +
-		"    hermInvestCli stock import stock.csv",
+		"    hermInvestCli stock import stock.csv\n\n" +
+
+		"  - Import stock from file and swap new order column as 0,1,3,2,4:\n" +
+		"    hermInvestCli stock import stock.csv --swapColumn 0,1,3,2",
 	Long: "" +
 		"Import stock from csv file.\n" +
 		"Please check your csv file has column stockNo type quantity unitPrice.",
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		skipHeader, _ := cmd.Flags().GetBool("skipHeader")
 		filePath := args[0]
+		skipHeader, _ := cmd.Flags().GetBool("skipHeader")
+		indexes, _ := cmd.Flags().GetString("swapColumn")
 
 		// need testcase check file path exist
 		// need testcase check file permission
@@ -78,7 +85,14 @@ var importCmd = &cobra.Command{
 
 		var transactions []*Transaction
 		for _, row := range rows {
-			// TODO: select stockNo, quantity ... from csv (swap row)
+			if indexes != "" {
+				row, err = swapColumn(row, indexes)
+				if err != nil {
+					fmt.Println("Error swaping column:", err)
+					return
+				}
+			}
+
 			stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(row)
 			if err != nil {
 				fmt.Println("Error parsing transaction data:", err)
@@ -109,5 +123,41 @@ var importCmd = &cobra.Command{
 }
 
 func init() {
-	importCmd.Flags().Bool("skipHeader", false, "Ignore header in CSV")
+	importCmd.Flags().Bool("skipHeader", false, "Ignore header")
+	importCmd.Flags().String("swapColumn", "", "Swap column")
+}
+
+// assume row length is 5
+// fmt.Println(swapColumn(row, ""))        // error
+// fmt.Println(swapColumn(row, "0,1,2,3")) // pass row[2], row[3], row[2], row[3], row[4]
+// fmt.Println(swapColumn(row, "0,1,3,2")) // pass row[0], row[1], row[3], row[2], row[4]
+// fmt.Println(swapColumn(row, "3,0,1,2")) // pass row[3], row[0], row[1], row[2], row[4]
+// fmt.Println(swapColumn(row, "3,0,1,6")) // index '6' is out of range
+// fmt.Println(swapColumn(row, "1")) 	   // swap row[1], row[1], row[2], row[3], row[4]
+func swapColumn(row []string, indexes string) ([]string, error) {
+	if indexes == "" {
+		return row, errors.New("indexes cannot be empty")
+	}
+
+	indexArr := strings.Split(indexes, ",")
+	if len(indexArr) > len(row) {
+		return nil, errors.New("indexes length exceeds row length")
+	}
+
+	rowForSwapping := make([]string, len(row))
+	copy(rowForSwapping, row)
+
+	for i, idxStr := range indexArr {
+		idx, err := strconv.Atoi(idxStr)
+		if err != nil {
+			return nil, fmt.Errorf("parsing index '%s': %w", idxStr, err)
+		}
+		if idx < 0 || idx >= len(row) {
+			return nil, fmt.Errorf("index '%d' is out of range", idx)
+		}
+
+		row[i] = rowForSwapping[idx]
+	}
+
+	return row, nil
 }
