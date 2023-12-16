@@ -27,6 +27,43 @@ func (repo *transactionRepository) createTransaction(t *Transaction) (int, error
 	return int(id), nil
 }
 
+// testcase begin, commit, rollback
+// CreateTransactions: insert transaction and return inserted id
+func (repo *transactionRepository) createTransactions(ts []*Transaction) error {
+
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare("INSERT INTO tblTransaction (stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes) VALUES (?, ?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, t := range ts {
+		rst, err := stmt.Exec(t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
+		if err != nil {
+			return err
+		}
+		_, err = rst.LastInsertId()
+		if err != nil {
+			fmt.Println("Error getting inserted id: ", err)
+			return err
+		}
+		// fmt.Printf("inserted id: %d\n", id)
+	}
+
+	// Commit the transaction.
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // queryTransactionAll
 func (repo *transactionRepository) queryTransactionAll() ([]*Transaction, error) {
 	query := `SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction`

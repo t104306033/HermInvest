@@ -76,6 +76,7 @@ var importCmd = &cobra.Command{
 		// init transactionRepository
 		repo := &transactionRepository{db: db}
 
+		var transactions []*Transaction
 		for _, row := range rows {
 			// TODO: select stockNo, quantity ... from csv (swap row)
 			stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(row)
@@ -85,21 +86,23 @@ var importCmd = &cobra.Command{
 			}
 
 			t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
-			// TODO: create Transactions, bulk insert?
-			id, err := repo.createTransaction(t)
-			if err != nil {
-				fmt.Println("Error creating transaction: ", err)
-			}
-
-			// Bool control show result or not
-			transactions, err := repo.queryTransactionByID(id)
-			if err != nil {
-				fmt.Println("Error querying database:", err)
-			}
-
-			// Print out result
-			displayResults(transactions)
+			transactions = append(transactions, t)
 		}
+
+		// TODO: create Transactions, bulk insert? Finally, I choose begin a db transaction
+		err = repo.createTransactions(transactions)
+		if err != nil {
+			fmt.Println("Error creating transaction: ", err)
+		}
+
+		// 	// Bool control show result or not
+		// 	transactions, err := repo.queryTransactionByID(id)
+		// 	if err != nil {
+		// 		fmt.Println("Error querying database:", err)
+		// 	}
+
+		// Print out result
+		// displayResults(transactions)
 	},
 }
 
