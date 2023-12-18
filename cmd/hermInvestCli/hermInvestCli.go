@@ -21,6 +21,15 @@ const (
 	version = "v0.2.10"
 )
 
+// version
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("hermInvestCli is %s\n", version)
+	},
+}
+
 // stock
 var stockCmd = &cobra.Command{
 	Use:   "stock",
@@ -33,18 +42,7 @@ var stockCmd = &cobra.Command{
 	},
 }
 
-// version
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the version number",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("hermInvestCli is %s\n", version)
-	},
-}
-
 // root
-
 var rootCmd = &cobra.Command{
 	Use:  "hermInvestCli",
 	Long: "Operate on the stock inventory for detailed management.",
