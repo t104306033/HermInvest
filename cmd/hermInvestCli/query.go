@@ -61,17 +61,19 @@ var queryCmd = &cobra.Command{
 	},
 }
 
-func displayResults(transactions []*Transaction) {
-	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
-	for _, t := range transactions {
-		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.id, t.stockNo, t.tranType, t.quantity, t.unitPrice, t.totalAmount, t.taxes)
-	}
-}
-
 func init() {
+	stockCmd.AddCommand(queryCmd)
+
 	queryCmd.Flags().Bool("all", false, "Query all records")
 	queryCmd.Flags().Int("id", 0, "Query by ID")
 	queryCmd.Flags().String("stockNo", "", "Stock number")
 	queryCmd.Flags().Int("type", 0, "Type")
 	queryCmd.Flags().String("date", "", "Date")
+}
+
+func displayResults(transactions []*Transaction) {
+	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
+	for _, t := range transactions {
+		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.id, t.stockNo, t.tranType, t.quantity, t.unitPrice, t.totalAmount, t.taxes)
+	}
 }

@@ -123,6 +123,8 @@ var importCmd = &cobra.Command{
 }
 
 func init() {
+	stockCmd.AddCommand(importCmd)
+
 	importCmd.Flags().Bool("skipHeader", false, "Ignore header")
 	importCmd.Flags().String("swapColumn", "", "Swap column")
 }

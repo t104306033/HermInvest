@@ -58,12 +58,6 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(stockCmd)
 	rootCmd.AddCommand(versionCmd)
-
-	stockCmd.AddCommand(addCmd)
-	stockCmd.AddCommand(deleteCmd)
-	stockCmd.AddCommand(updateCmd)
-	stockCmd.AddCommand(queryCmd)
-	stockCmd.AddCommand(importCmd)
 }
 
 func main() {

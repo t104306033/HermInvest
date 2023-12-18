@@ -52,6 +52,10 @@ var deleteCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	stockCmd.AddCommand(deleteCmd)
+}
+
 func confirmDeletion() bool {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Are you sure you want to delete this transaction? (yes/no): ")

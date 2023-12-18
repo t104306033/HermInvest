@@ -69,3 +69,7 @@ var updateCmd = &cobra.Command{
 		fmt.Printf("Successfully updated transaction ID %d with new unit price %.2f\n", t.id, t.unitPrice)
 	},
 }
+
+func init() {
+	stockCmd.AddCommand(updateCmd)
+}

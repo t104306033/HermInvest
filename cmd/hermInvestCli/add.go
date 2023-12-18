@@ -58,6 +58,10 @@ var addCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	stockCmd.AddCommand(addCmd)
+}
+
 func ParseTransactionForAddCmd(args []string) (string, int, int, float64, string, error) {
 	stockNo := args[0] // regex a-z 0-9
 
