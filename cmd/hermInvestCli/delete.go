@@ -16,6 +16,7 @@ var deleteCmd = &cobra.Command{
 		"  - Delete by ID:\n" +
 		"    hermInvestCli stock delete 11",
 	Long: `Delete stock from the inventory by providing the stock transaction ID`,
+	Args: cobra.ExactArgs(1),
 	Run:  deleteRun,
 }
 
@@ -24,12 +25,6 @@ func init() {
 }
 
 func deleteRun(cmd *cobra.Command, args []string) {
-	if len(args) != 1 {
-		fmt.Println("Please provide the transaction ID to delete.")
-		cmd.Help()
-		return
-	}
-
 	id, err := strconv.Atoi(args[0])
 	if err != nil {
 		fmt.Println("Invalid ID provided. Please provide a valid ID.")

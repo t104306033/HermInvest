@@ -32,7 +32,7 @@ var importCmd = &cobra.Command{
 	Long: "" +
 		"Import stock from csv file.\n" +
 		"Please check your csv file has column stockNo type quantity unitPrice.",
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run:  importRun,
 }
 

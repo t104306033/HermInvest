@@ -21,6 +21,7 @@ var updateCmd = &cobra.Command{
 		"  - Update unit Price by ID:\n" +
 		"    hermInvestCli stock update 11 20.3",
 	Long: `Update the unit price of stock in the inventory using the transaction ID.`,
+	Args: cobra.ExactArgs(2),
 	Run:  updateRun,
 }
 
@@ -29,12 +30,6 @@ func init() {
 }
 
 func updateRun(cmd *cobra.Command, args []string) {
-	if len(args) < 2 {
-		fmt.Println("Please provide transaction ID and unit price")
-		cmd.Help()
-		return
-	}
-
 	transactionID, err := strconv.Atoi(args[0])
 	if err != nil {
 		fmt.Println("Error parsing integer: ", err)

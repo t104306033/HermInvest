@@ -22,7 +22,8 @@ var queryCmd = &cobra.Command{
 		"  - Query by stock number, type, and date:\n" +
 		"    hermInvestCli stock query --stockNo 0050 --type 1 --date 2023-12-01",
 	Long: "Query stock by transaction ID, stock number, type, or date.",
-	Run:  queryRun,
+	Args: cobra.NoArgs,
+	RunE: queryRun,
 }
 
 func init() {
@@ -35,11 +36,9 @@ func init() {
 	queryCmd.Flags().String("date", "", "Date")
 }
 
-func queryRun(cmd *cobra.Command, args []string) {
-	if cmd.Flags().NFlag() == 0 && len(args) == 0 {
-		fmt.Println("No args and no flags provided.")
-		cmd.Help()
-		return
+func queryRun(cmd *cobra.Command, args []string) error {
+	if cmd.Flags().NFlag() == 0 {
+		return fmt.Errorf("no flags provided")
 	}
 
 	all, _ := cmd.Flags().GetBool("all")
@@ -71,6 +70,8 @@ func queryRun(cmd *cobra.Command, args []string) {
 	}
 
 	displayResults(transactions)
+
+	return nil
 }
 
 func displayResults(transactions []*Transaction) {
