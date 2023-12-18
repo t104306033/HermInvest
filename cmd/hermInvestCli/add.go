@@ -25,41 +25,43 @@ var addCmd = &cobra.Command{
 		"    hermInvestCli stock add -- 0050 -1 1500 23.5 2023-12-01",
 	Long: `Add stock by transaction stock number, type, quantity, and unit price`,
 	Args: cobra.MinimumNArgs(4),
-	Run: func(cmd *cobra.Command, args []string) {
-		stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(args)
-		if err != nil {
-			fmt.Println("Error parsing transaction data:", err)
-			return
-		}
-
-		db, err := GetDBConnection()
-		if err != nil {
-			fmt.Println("Error geting DB connection: ", err)
-		}
-		defer db.Close()
-
-		// init transactionRepository
-		repo := &transactionRepository{db: db}
-
-		t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
-		id, err := repo.createTransaction(t)
-		if err != nil {
-			fmt.Println("Error creating transaction: ", err)
-		}
-
-		transactions, err := repo.queryTransactionByID(id)
-		if err != nil {
-			fmt.Println("Error querying database:", err)
-		}
-
-		// Print out result
-		displayResults(transactions)
-
-	},
+	Run:  addRun,
 }
 
 func init() {
 	stockCmd.AddCommand(addCmd)
+}
+
+func addRun(cmd *cobra.Command, args []string) {
+	stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(args)
+	if err != nil {
+		fmt.Println("Error parsing transaction data:", err)
+		return
+	}
+
+	db, err := GetDBConnection()
+	if err != nil {
+		fmt.Println("Error geting DB connection: ", err)
+	}
+	defer db.Close()
+
+	// init transactionRepository
+	repo := &transactionRepository{db: db}
+
+	t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+	id, err := repo.createTransaction(t)
+	if err != nil {
+		fmt.Println("Error creating transaction: ", err)
+	}
+
+	transactions, err := repo.queryTransactionByID(id)
+	if err != nil {
+		fmt.Println("Error querying database:", err)
+	}
+
+	// Print out result
+	displayResults(transactions)
+
 }
 
 func ParseTransactionForAddCmd(args []string) (string, int, int, float64, string, error) {
