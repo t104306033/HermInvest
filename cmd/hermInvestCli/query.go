@@ -22,43 +22,7 @@ var queryCmd = &cobra.Command{
 		"  - Query by stock number, type, and date:\n" +
 		"    hermInvestCli stock query --stockNo 0050 --type 1 --date 2023-12-01",
 	Long: "Query stock by transaction ID, stock number, type, or date.",
-	Run: func(cmd *cobra.Command, args []string) {
-		if cmd.Flags().NFlag() == 0 && len(args) == 0 {
-			fmt.Println("No args and no flags provided.")
-			cmd.Help()
-			return
-		}
-
-		all, _ := cmd.Flags().GetBool("all")
-		id, _ := cmd.Flags().GetInt("id")
-		stockNo, _ := cmd.Flags().GetString("stockNo")
-		tranType, _ := cmd.Flags().GetInt("type")
-		date, _ := cmd.Flags().GetString("date")
-
-		db, err := GetDBConnection()
-		if err != nil {
-			fmt.Println("Error geting DB connection: ", err)
-		}
-		defer db.Close()
-
-		// init transactionRepository
-		repo := &transactionRepository{db: db}
-
-		var transactions []*Transaction
-		var transactionsErr error
-		if all {
-			transactions, transactionsErr = repo.queryTransactionAll()
-		} else if id != 0 {
-			transactions, transactionsErr = repo.queryTransactionByID(id)
-		} else {
-			transactions, transactionsErr = repo.queryTransactionByDetails(stockNo, tranType, date)
-		}
-		if transactionsErr != nil {
-			fmt.Println("Error querying database:", transactionsErr)
-		}
-
-		displayResults(transactions)
-	},
+	Run:  queryRun,
 }
 
 func init() {
@@ -69,6 +33,44 @@ func init() {
 	queryCmd.Flags().String("stockNo", "", "Stock number")
 	queryCmd.Flags().Int("type", 0, "Type")
 	queryCmd.Flags().String("date", "", "Date")
+}
+
+func queryRun(cmd *cobra.Command, args []string) {
+	if cmd.Flags().NFlag() == 0 && len(args) == 0 {
+		fmt.Println("No args and no flags provided.")
+		cmd.Help()
+		return
+	}
+
+	all, _ := cmd.Flags().GetBool("all")
+	id, _ := cmd.Flags().GetInt("id")
+	stockNo, _ := cmd.Flags().GetString("stockNo")
+	tranType, _ := cmd.Flags().GetInt("type")
+	date, _ := cmd.Flags().GetString("date")
+
+	db, err := GetDBConnection()
+	if err != nil {
+		fmt.Println("Error geting DB connection: ", err)
+	}
+	defer db.Close()
+
+	// init transactionRepository
+	repo := &transactionRepository{db: db}
+
+	var transactions []*Transaction
+	var transactionsErr error
+	if all {
+		transactions, transactionsErr = repo.queryTransactionAll()
+	} else if id != 0 {
+		transactions, transactionsErr = repo.queryTransactionByID(id)
+	} else {
+		transactions, transactionsErr = repo.queryTransactionByDetails(stockNo, tranType, date)
+	}
+	if transactionsErr != nil {
+		fmt.Println("Error querying database:", transactionsErr)
+	}
+
+	displayResults(transactions)
 }
 
 func displayResults(transactions []*Transaction) {
