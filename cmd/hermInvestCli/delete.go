@@ -16,40 +16,41 @@ var deleteCmd = &cobra.Command{
 		"  - Delete by ID:\n" +
 		"    hermInvestCli stock delete 11",
 	Long: `Delete stock from the inventory by providing the stock transaction ID`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			fmt.Println("Please provide the transaction ID to delete.")
-			cmd.Help()
+	Args: cobra.ExactArgs(1),
+	Run:  deleteRun,
+}
+
+func init() {
+	stockCmd.AddCommand(deleteCmd)
+}
+
+func deleteRun(cmd *cobra.Command, args []string) {
+	id, err := strconv.Atoi(args[0])
+	if err != nil {
+		fmt.Println("Invalid ID provided. Please provide a valid ID.")
+		return
+	}
+
+	db, err := GetDBConnection()
+	if err != nil {
+		fmt.Println("Error geting DB connection: ", err)
+	}
+	defer db.Close()
+
+	// init transactionRepository
+	repo := &transactionRepository{db: db}
+
+	confirm := confirmDeletion()
+	if confirm {
+		err = repo.deleteTransaction(id)
+		if err != nil {
+			fmt.Println("Error deleting transaction:", err)
 			return
 		}
-
-		id, err := strconv.Atoi(args[0])
-		if err != nil {
-			fmt.Println("Invalid ID provided. Please provide a valid ID.")
-			return
-		}
-
-		db, err := GetDBConnection()
-		if err != nil {
-			fmt.Println("Error geting DB connection: ", err)
-		}
-		defer db.Close()
-
-		// init transactionRepository
-		repo := &transactionRepository{db: db}
-
-		confirm := confirmDeletion()
-		if confirm {
-			err = repo.deleteTransaction(id)
-			if err != nil {
-				fmt.Println("Error deleting transaction:", err)
-				return
-			}
-			fmt.Println("Transaction deleted successfully!")
-		} else {
-			fmt.Println("Deletion cancelled.")
-		}
-	},
+		fmt.Println("Transaction deleted successfully!")
+	} else {
+		fmt.Println("Deletion cancelled.")
+	}
 }
 
 func confirmDeletion() bool {

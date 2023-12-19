@@ -18,8 +18,17 @@ import (
 
 const (
 	// hermInvestCli version
-	version = "v0.2.10"
+	version = "v0.2.12"
 )
+
+// version
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("hermInvestCli is %s\n", version)
+	},
+}
 
 // stock
 var stockCmd = &cobra.Command{
@@ -33,18 +42,7 @@ var stockCmd = &cobra.Command{
 	},
 }
 
-// version
-
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Print the version number",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("hermInvestCli is %s\n", version)
-	},
-}
-
 // root
-
 var rootCmd = &cobra.Command{
 	Use:  "hermInvestCli",
 	Long: "Operate on the stock inventory for detailed management.",
@@ -58,12 +56,6 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(stockCmd)
 	rootCmd.AddCommand(versionCmd)
-
-	stockCmd.AddCommand(addCmd)
-	stockCmd.AddCommand(deleteCmd)
-	stockCmd.AddCommand(updateCmd)
-	stockCmd.AddCommand(queryCmd)
-	stockCmd.AddCommand(importCmd)
 }
 
 func main() {

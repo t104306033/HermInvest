@@ -21,51 +21,52 @@ var updateCmd = &cobra.Command{
 		"  - Update unit Price by ID:\n" +
 		"    hermInvestCli stock update 11 20.3",
 	Long: `Update the unit price of stock in the inventory using the transaction ID.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 2 {
-			fmt.Println("Please provide transaction ID and unit price")
-			cmd.Help()
-			return
-		}
+	Args: cobra.ExactArgs(2),
+	Run:  updateRun,
+}
 
-		transactionID, err := strconv.Atoi(args[0])
-		if err != nil {
-			fmt.Println("Error parsing integer: ", err)
-		}
-		unitPrice, err := strconv.ParseFloat(args[1], 64)
-		if err != nil {
-			fmt.Println("Error parsing float: ", err)
-		}
+func init() {
+	stockCmd.AddCommand(updateCmd)
+}
 
-		db, err := GetDBConnection()
-		if err != nil {
-			fmt.Println("Error geting DB connection: ", err)
-		}
-		defer db.Close()
+func updateRun(cmd *cobra.Command, args []string) {
+	transactionID, err := strconv.Atoi(args[0])
+	if err != nil {
+		fmt.Println("Error parsing integer: ", err)
+	}
+	unitPrice, err := strconv.ParseFloat(args[1], 64)
+	if err != nil {
+		fmt.Println("Error parsing float: ", err)
+	}
 
-		// init transactionRepository
-		repo := &transactionRepository{db: db}
+	db, err := GetDBConnection()
+	if err != nil {
+		fmt.Println("Error geting DB connection: ", err)
+	}
+	defer db.Close()
 
-		transactions, err := repo.queryTransactionByID(transactionID)
-		if err != nil {
-			fmt.Println("Error querying database:", err)
-		}
+	// init transactionRepository
+	repo := &transactionRepository{db: db}
 
-		// TODO: check update work. ex: update a fake transaction ID to db
-		t := transactions[0]
-		t.unitPrice = unitPrice // update unit Price
+	transactions, err := repo.queryTransactionByID(transactionID)
+	if err != nil {
+		fmt.Println("Error querying database:", err)
+	}
 
-		// Recalculate
-		t.calculateTotalAmount()
-		t.calculateTaxesFromTotalAmount()
+	// TODO: check update work. ex: update a fake transaction ID to db
+	t := transactions[0]
+	t.unitPrice = unitPrice // update unit Price
 
-		// update db
-		err = repo.updateTransaction(t)
-		if err != nil {
-			fmt.Println("Error updating stock information:", err)
-			return
-		}
+	// Recalculate
+	t.calculateTotalAmount()
+	t.calculateTaxesFromTotalAmount()
 
-		fmt.Printf("Successfully updated transaction ID %d with new unit price %.2f\n", t.id, t.unitPrice)
-	},
+	// update db
+	err = repo.updateTransaction(t)
+	if err != nil {
+		fmt.Println("Error updating stock information:", err)
+		return
+	}
+
+	fmt.Printf("Successfully updated transaction ID %d with new unit price %.2f\n", t.id, t.unitPrice)
 }

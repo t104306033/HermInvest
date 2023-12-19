@@ -22,61 +22,76 @@ var addCmd = &cobra.Command{
 		"    hermInvestCli stock add 0050 1 1500 23.5\n\n" +
 
 		"  - Sale on a specific date:\n" +
-		"    hermInvestCli stock add 0050 -1 1500 23.5 2023-12-01",
+		"    hermInvestCli stock add -- 0050 -1 1500 23.5 2023-12-01",
 	Long: `Add stock by transaction stock number, type, quantity, and unit price`,
-	Args: cobra.MinimumNArgs(4),
-	Run: func(cmd *cobra.Command, args []string) {
-		stockNo := args[0] // regex a-z 0-9
-		tranType, err := strconv.Atoi(args[1])
-		if err != nil {
-			fmt.Println("Error parsing integer: ", err)
-			return
-		}
-		quantity, err := strconv.Atoi(args[2])
-		if err != nil {
-			fmt.Println("Error parsing integer: ", err)
-			return
-		}
-		unitPrice, err := strconv.ParseFloat(args[3], 64)
-		if err != nil {
-			fmt.Println("Error parsing float: ", err)
-			return
-		}
+	Args: cobra.RangeArgs(4, 5),
+	Run:  addRun,
+}
 
-		var date string
-		if len(args) > 4 {
-			// check user input time format is correct
-			parsedTime, err := time.Parse(time.DateOnly, args[4])
-			if err != nil {
-				fmt.Println("Error parsing date: ", err)
-				return
-			}
-			date = parsedTime.Format(time.DateOnly)
-		} else {
-			date = time.Now().Format(time.DateOnly)
-		}
+func init() {
+	stockCmd.AddCommand(addCmd)
+}
 
-		db, err := GetDBConnection()
+func addRun(cmd *cobra.Command, args []string) {
+	stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(args)
+	if err != nil {
+		fmt.Println("Error parsing transaction data:", err)
+		return
+	}
+
+	db, err := GetDBConnection()
+	if err != nil {
+		fmt.Println("Error geting DB connection: ", err)
+	}
+	defer db.Close()
+
+	// init transactionRepository
+	repo := &transactionRepository{db: db}
+
+	t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+	id, err := repo.createTransaction(t)
+	if err != nil {
+		fmt.Println("Error creating transaction: ", err)
+	}
+
+	transactions, err := repo.queryTransactionByID(id)
+	if err != nil {
+		fmt.Println("Error querying database:", err)
+	}
+
+	// Print out result
+	displayResults(transactions)
+
+}
+
+func ParseTransactionForAddCmd(args []string) (string, int, int, float64, string, error) {
+	stockNo := args[0] // regex a-z 0-9
+
+	tranType, err := strconv.Atoi(args[1])
+	if err != nil {
+		return "", 0, 0, 0, "", fmt.Errorf("error parsing integer: %s", err)
+	}
+
+	quantity, err := strconv.Atoi(args[2])
+	if err != nil {
+		return "", 0, 0, 0, "", fmt.Errorf("error parsing integer: %s", err)
+	}
+
+	unitPrice, err := strconv.ParseFloat(args[3], 64)
+	if err != nil {
+		return "", 0, 0, 0, "", fmt.Errorf("error parsing float: %s", err)
+	}
+
+	var date string
+	if len(args) > 4 {
+		parsedTime, err := time.Parse(time.DateOnly, args[4])
 		if err != nil {
-			fmt.Println("Error geting DB connection: ", err)
+			return "", 0, 0, 0, "", fmt.Errorf("error parsing date: %s", err)
 		}
-		defer db.Close()
+		date = parsedTime.Format(time.DateOnly)
+	} else {
+		date = time.Now().Format(time.DateOnly)
+	}
 
-		// init transactionRepository
-		repo := &transactionRepository{db: db}
-		t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
-		id, err := repo.createTransaction(t)
-		if err != nil {
-			fmt.Println("Error creating transaction: ", err)
-		}
-
-		transactions, err := repo.queryTransactionByID(id)
-		if err != nil {
-			fmt.Println("Error querying database:", err)
-		}
-
-		// Print out result
-		displayResults(transactions)
-
-	},
+	return stockNo, tranType, quantity, unitPrice, date, nil
 }

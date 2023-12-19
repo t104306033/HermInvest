@@ -10,21 +10,76 @@ type transactionRepository struct {
 	db *sql.DB
 }
 
-// CreateTransaction: insert transaction and return inserted id
-func (repo *transactionRepository) createTransaction(t *Transaction) (int, error) {
-	query := `INSERT INTO tblTransaction (stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes) VALUES (?, ?, ?, ?, ?, ?, ?)`
-	result, err := repo.db.Exec(query, t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
+func (repo *transactionRepository) prepareStmt(sqlStmt string, tx *sql.Tx) (*sql.Stmt, error) {
+	var stmt *sql.Stmt
+	var err error
+
+	if tx == nil {
+		stmt, err = repo.db.Prepare(sqlStmt)
+	} else {
+		stmt, err = tx.Prepare(sqlStmt)
+	}
+
+	return stmt, err
+}
+
+func (repo *transactionRepository) createTransactionWithTx(t *Transaction, tx *sql.Tx) (int, error) {
+	const insertSql string = "" +
+		"INSERT INTO tblTransaction" +
+		"(stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes)" +
+		"VALUES (?, ?, ?, ?, ?, ?, ?)"
+
+	stmt, err := repo.prepareStmt(insertSql, tx)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	rst, err := stmt.Exec(t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
 	if err != nil {
 		fmt.Println("Error insert database: ", err)
 		return 0, err
 	}
 
-	id, err := result.LastInsertId()
+	id, err := rst.LastInsertId()
 	if err != nil {
 		fmt.Println("Error getting inserted id: ", err)
 		return 0, err
 	}
+
 	return int(id), nil
+}
+
+// CreateTransaction: insert transaction and return inserted id
+func (repo *transactionRepository) createTransaction(t *Transaction) (int, error) {
+	return repo.createTransactionWithTx(t, nil)
+}
+
+// testcase begin, commit, rollback
+// CreateTransactions: insert transactions and return inserted ids
+func (repo *transactionRepository) createTransactions(ts []*Transaction) ([]int, error) {
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var insertedIDs []int
+	for _, t := range ts {
+		id, err := repo.createTransactionWithTx(t, tx)
+		if err != nil {
+			fmt.Println("Error create transaction with Tx: ", err)
+			return nil, err
+		}
+		insertedIDs = append(insertedIDs, int(id))
+	}
+
+	// Commit the transaction.
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return insertedIDs, nil
 }
 
 // queryTransactionAll
