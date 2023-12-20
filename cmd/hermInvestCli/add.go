@@ -1,6 +1,7 @@
 package main
 
 import (
+	"HermInvest/pkg/model"
 	"fmt"
 	"strconv"
 	"time"
@@ -48,7 +49,7 @@ func addRun(cmd *cobra.Command, args []string) {
 	// init transactionRepository
 	repo := &transactionRepository{db: db}
 
-	t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+	t := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
 	id, err := repo.createTransaction(t)
 	if err != nil {
 		fmt.Println("Error creating transaction: ", err)

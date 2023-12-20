@@ -1,6 +1,7 @@
 package main
 
 import (
+	"HermInvest/pkg/model"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -56,7 +57,7 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	// init transactionRepository
 	repo := &transactionRepository{db: db}
 
-	var transactions []*Transaction
+	var transactions []*model.Transaction
 	var transactionsErr error
 	if all {
 		transactions, transactionsErr = repo.queryTransactionAll()
@@ -74,9 +75,9 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func displayResults(transactions []*Transaction) {
+func displayResults(transactions []*model.Transaction) {
 	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
 	for _, t := range transactions {
-		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.id, t.stockNo, t.tranType, t.quantity, t.unitPrice, t.totalAmount, t.taxes)
+		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.ID, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
 	}
 }

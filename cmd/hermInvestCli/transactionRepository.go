@@ -1,6 +1,7 @@
 package main
 
 import (
+	"HermInvest/pkg/model"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -23,7 +24,7 @@ func (repo *transactionRepository) prepareStmt(sqlStmt string, tx *sql.Tx) (*sql
 	return stmt, err
 }
 
-func (repo *transactionRepository) createTransactionWithTx(t *Transaction, tx *sql.Tx) (int, error) {
+func (repo *transactionRepository) createTransactionWithTx(t *model.Transaction, tx *sql.Tx) (int, error) {
 	const insertSql string = "" +
 		"INSERT INTO tblTransaction" +
 		"(stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes)" +
@@ -35,7 +36,7 @@ func (repo *transactionRepository) createTransactionWithTx(t *Transaction, tx *s
 	}
 	defer stmt.Close()
 
-	rst, err := stmt.Exec(t.stockNo, t.date, t.quantity, t.tranType, t.unitPrice, t.totalAmount, t.taxes)
+	rst, err := stmt.Exec(t.StockNo, t.Date, t.Quantity, t.TranType, t.UnitPrice, t.TotalAmount, t.Taxes)
 	if err != nil {
 		fmt.Println("Error insert database: ", err)
 		return 0, err
@@ -51,13 +52,13 @@ func (repo *transactionRepository) createTransactionWithTx(t *Transaction, tx *s
 }
 
 // CreateTransaction: insert transaction and return inserted id
-func (repo *transactionRepository) createTransaction(t *Transaction) (int, error) {
+func (repo *transactionRepository) createTransaction(t *model.Transaction) (int, error) {
 	return repo.createTransactionWithTx(t, nil)
 }
 
 // testcase begin, commit, rollback
 // CreateTransactions: insert transactions and return inserted ids
-func (repo *transactionRepository) createTransactions(ts []*Transaction) ([]int, error) {
+func (repo *transactionRepository) createTransactions(ts []*model.Transaction) ([]int, error) {
 	tx, err := repo.db.Begin()
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ func (repo *transactionRepository) createTransactions(ts []*Transaction) ([]int,
 }
 
 // queryTransactionAll
-func (repo *transactionRepository) queryTransactionAll() ([]*Transaction, error) {
+func (repo *transactionRepository) queryTransactionAll() ([]*model.Transaction, error) {
 	query := `SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction`
 	rows, err := repo.db.Query(query)
 	if err != nil {
@@ -91,10 +92,10 @@ func (repo *transactionRepository) queryTransactionAll() ([]*Transaction, error)
 	}
 	defer rows.Close()
 
-	var transactions []*Transaction
+	var transactions []*model.Transaction
 	for rows.Next() {
-		var t Transaction
-		err := rows.Scan(&t.id, &t.stockNo, &t.tranType, &t.quantity, &t.unitPrice, &t.totalAmount, &t.taxes)
+		var t model.Transaction
+		err := rows.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 		if err != nil {
 			return nil, err
 		}
@@ -109,13 +110,13 @@ func (repo *transactionRepository) queryTransactionAll() ([]*Transaction, error)
 }
 
 // queryTransactionByID
-func (repo *transactionRepository) queryTransactionByID(id int) ([]*Transaction, error) {
+func (repo *transactionRepository) queryTransactionByID(id int) ([]*model.Transaction, error) {
 	query := `SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = ?`
 	row := repo.db.QueryRow(query, id)
 
-	var transactions []*Transaction
-	var t Transaction
-	err := row.Scan(&t.id, &t.stockNo, &t.tranType, &t.quantity, &t.unitPrice, &t.totalAmount, &t.taxes)
+	var transactions []*model.Transaction
+	var t model.Transaction
+	err := row.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +126,7 @@ func (repo *transactionRepository) queryTransactionByID(id int) ([]*Transaction,
 }
 
 // queryTransactionByDetails
-func (repo *transactionRepository) queryTransactionByDetails(stockNo string, tranType int, date string) ([]*Transaction, error) {
+func (repo *transactionRepository) queryTransactionByDetails(stockNo string, tranType int, date string) ([]*model.Transaction, error) {
 	var conditions []string
 	var args []interface{}
 
@@ -150,10 +151,10 @@ func (repo *transactionRepository) queryTransactionByDetails(stockNo string, tra
 	}
 	defer rows.Close()
 
-	var transactions []*Transaction
+	var transactions []*model.Transaction
 	for rows.Next() {
-		var t Transaction
-		err := rows.Scan(&t.id, &t.stockNo, &t.tranType, &t.quantity, &t.unitPrice, &t.totalAmount, &t.taxes)
+		var t model.Transaction
+		err := rows.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 		if err != nil {
 			return nil, err
 		}
@@ -168,8 +169,8 @@ func (repo *transactionRepository) queryTransactionByDetails(stockNo string, tra
 }
 
 // updateTransaction
-func (repo *transactionRepository) updateTransaction(t *Transaction) error {
-	_, err := repo.db.Exec("UPDATE tblTransaction SET unitPrice = ?, totalAmount = ?, taxes = ? WHERE id = ?", t.unitPrice, t.totalAmount, t.taxes, t.id)
+func (repo *transactionRepository) updateTransaction(t *model.Transaction) error {
+	_, err := repo.db.Exec("UPDATE tblTransaction SET unitPrice = ?, totalAmount = ?, taxes = ? WHERE id = ?", t.UnitPrice, t.TotalAmount, t.Taxes, t.ID)
 	return err
 }
 

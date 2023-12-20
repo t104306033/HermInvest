@@ -1,6 +1,7 @@
 package main
 
 import (
+	"HermInvest/pkg/model"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -93,7 +94,7 @@ func importRun(cmd *cobra.Command, args []string) {
 	// init transactionRepository
 	repo := &transactionRepository{db: db}
 
-	var transactions []*Transaction
+	var transactions []*model.Transaction
 	for _, row := range rows {
 		if indexes != "" {
 			row, err = swapColumn(row, indexes)
@@ -109,7 +110,7 @@ func importRun(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+		t := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
 		transactions = append(transactions, t)
 	}
 

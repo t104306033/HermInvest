@@ -55,11 +55,11 @@ func updateRun(cmd *cobra.Command, args []string) {
 
 	// TODO: check update work. ex: update a fake transaction ID to db
 	t := transactions[0]
-	t.unitPrice = unitPrice // update unit Price
+	t.UnitPrice = unitPrice // update unit Price
 
 	// Recalculate
-	t.calculateTotalAmount()
-	t.calculateTaxesFromTotalAmount()
+	t.CalculateTotalAmount()
+	t.CalculateTaxesFromTotalAmount()
 
 	// update db
 	err = repo.updateTransaction(t)
@@ -68,5 +68,5 @@ func updateRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fmt.Printf("Successfully updated transaction ID %d with new unit price %.2f\n", t.id, t.unitPrice)
+	fmt.Printf("Successfully updated transaction ID %d with new unit price %.2f\n", t.ID, t.UnitPrice)
 }
