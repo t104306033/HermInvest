@@ -38,7 +38,7 @@ func NewTransactionFromInput(
 		UnitPrice: unitPrice,
 	}
 	t.calculateTotalAmount()
-	t.calculateTaxesFromTotalAmount()
+	t.calculateTaxes()
 	return t
 }
 
@@ -47,14 +47,8 @@ func (t *Transaction) calculateTotalAmount() {
 	t.TotalAmount = int(float64(t.Quantity) * t.UnitPrice)
 }
 
-// Calculate Taxes From Quantity And Price
-func (t *Transaction) calculateTaxesFromQuantityAndPrice() {
-	var taxRate float64 = 0.003
-	t.Taxes = int(float64(t.Quantity) * t.UnitPrice * taxRate)
-}
-
 // Calculate Taxes From Total Amount
-func (t *Transaction) calculateTaxesFromTotalAmount() {
+func (t *Transaction) calculateTaxes() {
 	var taxRate float64 = 0.003
 	t.Taxes = int(float64(t.TotalAmount) * taxRate)
 }
@@ -67,5 +61,5 @@ func (t *Transaction) SetUnitPrice(unitPrice float64) {
 
 	// Recalculate total amount and taxes
 	t.calculateTotalAmount()
-	t.calculateTaxesFromTotalAmount()
+	t.calculateTaxes()
 }
