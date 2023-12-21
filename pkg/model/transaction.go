@@ -1,5 +1,6 @@
 package model
 
+// Transaction represents a share transaction.
 type Transaction struct {
 	ID          int
 	StockNo     string
@@ -11,7 +12,7 @@ type Transaction struct {
 	Taxes       int
 }
 
-// New Transaction From DB
+// NewTransactionFromDB creates a new Transaction object from database records.
 func NewTransactionFromDB(
 	id int, stockNo string, date string, quantity int, tranType int,
 	unitPrice float64, totalAmount int, taxes int) *Transaction {
@@ -27,7 +28,9 @@ func NewTransactionFromDB(
 	}
 }
 
-// New Transaction From User Input
+// NewTransactionFromInput creates a new Transaction object from input.
+// It initializes the transaction with inputs. Additionally, the total amount
+// and taxes are recalculated based on the new transaction details.
 func NewTransactionFromInput(
 	stockNo string, date string, quantity int, tranType int, unitPrice float64) *Transaction {
 	t := &Transaction{
@@ -42,12 +45,12 @@ func NewTransactionFromInput(
 	return t
 }
 
-// Calculate TotalAmount
+// calculateTotalAmount calculates the total amount based on transaction details.
 func (t *Transaction) calculateTotalAmount() {
 	t.TotalAmount = int(float64(t.Quantity) * t.UnitPrice)
 }
 
-// Calculate Taxes From Total Amount
+// calculateTotalAmount calculates the taxes based on transaction details.
 func (t *Transaction) calculateTaxes() {
 	var taxRate float64 = 0.003
 	t.Taxes = int(float64(t.TotalAmount) * taxRate)
