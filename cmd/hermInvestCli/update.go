@@ -55,11 +55,7 @@ func updateRun(cmd *cobra.Command, args []string) {
 
 	// TODO: check update work. ex: update a fake transaction ID to db
 	t := transactions[0]
-	t.UnitPrice = unitPrice // update unit Price
-
-	// Recalculate
-	t.CalculateTotalAmount()
-	t.CalculateTaxesFromTotalAmount()
+	t.SetUnitPrice(unitPrice) // update unit Price
 
 	// update db
 	err = repo.updateTransaction(t)

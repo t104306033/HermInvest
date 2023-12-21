@@ -59,9 +59,13 @@ func (t *Transaction) calculateTaxesFromTotalAmount() {
 	t.Taxes = int(float64(t.TotalAmount) * taxRate)
 }
 
-func (t *Transaction) CalculateTotalAmount() {
+// SetUnitPrice updates the unit price of the transaction.
+// It recalculates the total amount and taxes based on the updated unit price.
+// The calculation of total amount and taxes are interdependent.
+func (t *Transaction) SetUnitPrice(unitPrice float64) {
+	t.UnitPrice = unitPrice
+
+	// Recalculate total amount and taxes
 	t.calculateTotalAmount()
-}
-func (t *Transaction) CalculateTaxesFromTotalAmount() {
 	t.calculateTaxesFromTotalAmount()
 }
