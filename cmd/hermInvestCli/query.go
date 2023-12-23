@@ -2,6 +2,7 @@ package main
 
 import (
 	"HermInvest/pkg/model"
+	"HermInvest/pkg/repository"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -55,16 +56,16 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &transactionRepository{db: db}
+	repo := &repository.TransactionRepository{DB: db}
 
 	var transactions []*model.Transaction
 	var transactionsErr error
 	if all {
-		transactions, transactionsErr = repo.queryTransactionAll()
+		transactions, transactionsErr = repo.QueryTransactionAll()
 	} else if id != 0 {
-		transactions, transactionsErr = repo.queryTransactionByID(id)
+		transactions, transactionsErr = repo.QueryTransactionByID(id)
 	} else {
-		transactions, transactionsErr = repo.queryTransactionByDetails(stockNo, tranType, date)
+		transactions, transactionsErr = repo.QueryTransactionByDetails(stockNo, tranType, date)
 	}
 	if transactionsErr != nil {
 		fmt.Println("Error querying database:", transactionsErr)

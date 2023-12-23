@@ -1,6 +1,7 @@
 package main
 
 import (
+	"HermInvest/pkg/repository"
 	"fmt"
 	"strconv"
 
@@ -46,9 +47,9 @@ func updateRun(cmd *cobra.Command, args []string) {
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &transactionRepository{db: db}
+	repo := &repository.TransactionRepository{DB: db}
 
-	transactions, err := repo.queryTransactionByID(transactionID)
+	transactions, err := repo.QueryTransactionByID(transactionID)
 	if err != nil {
 		fmt.Println("Error querying database:", err)
 	}
@@ -58,7 +59,7 @@ func updateRun(cmd *cobra.Command, args []string) {
 	t.SetUnitPrice(unitPrice) // update unit Price
 
 	// update db
-	err = repo.updateTransaction(t)
+	err = repo.UpdateTransaction(t)
 	if err != nil {
 		fmt.Println("Error updating stock information:", err)
 		return

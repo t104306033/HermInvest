@@ -2,6 +2,7 @@ package main
 
 import (
 	"HermInvest/pkg/model"
+	"HermInvest/pkg/repository"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -92,7 +93,7 @@ func importRun(cmd *cobra.Command, args []string) {
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &transactionRepository{db: db}
+	repo := &repository.TransactionRepository{DB: db}
 
 	var transactions []*model.Transaction
 	for _, row := range rows {
@@ -115,7 +116,7 @@ func importRun(cmd *cobra.Command, args []string) {
 	}
 
 	// TODO: create Transactions, bulk insert? Finally, I choose begin a db transaction
-	ids, err := repo.createTransactions(transactions)
+	ids, err := repo.CreateTransactions(transactions)
 	if err != nil {
 		fmt.Println("Error creating transaction: ", err)
 	}
