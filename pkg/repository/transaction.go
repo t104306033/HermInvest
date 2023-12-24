@@ -7,8 +7,15 @@ import (
 	"strings"
 )
 
+// repo TransactionRepository should be transactionRepository
 type TransactionRepository struct {
-	DB *sql.DB
+	db *sql.DB
+}
+
+func NewTransactionRepository(db *sql.DB) *TransactionRepository {
+	return &TransactionRepository{
+		db: db,
+	}
 }
 
 func (repo *TransactionRepository) prepareStmt(sqlStmt string, tx *sql.Tx) (*sql.Stmt, error) {
@@ -16,7 +23,7 @@ func (repo *TransactionRepository) prepareStmt(sqlStmt string, tx *sql.Tx) (*sql
 	var err error
 
 	if tx == nil {
-		stmt, err = repo.DB.Prepare(sqlStmt)
+		stmt, err = repo.db.Prepare(sqlStmt)
 	} else {
 		stmt, err = tx.Prepare(sqlStmt)
 	}
@@ -59,7 +66,7 @@ func (repo *TransactionRepository) CreateTransaction(t *model.Transaction) (int,
 // testcase begin, commit, rollback
 // CreateTransactions: insert transactions and return inserted ids
 func (repo *TransactionRepository) CreateTransactions(ts []*model.Transaction) ([]int, error) {
-	tx, err := repo.DB.Begin()
+	tx, err := repo.db.Begin()
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +93,7 @@ func (repo *TransactionRepository) CreateTransactions(ts []*model.Transaction) (
 // queryTransactionAll
 func (repo *TransactionRepository) QueryTransactionAll() ([]*model.Transaction, error) {
 	query := `SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction`
-	rows, err := repo.DB.Query(query)
+	rows, err := repo.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +119,7 @@ func (repo *TransactionRepository) QueryTransactionAll() ([]*model.Transaction, 
 // queryTransactionByID
 func (repo *TransactionRepository) QueryTransactionByID(id int) ([]*model.Transaction, error) {
 	query := `SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = ?`
-	row := repo.DB.QueryRow(query, id)
+	row := repo.db.QueryRow(query, id)
 
 	var transactions []*model.Transaction
 	var t model.Transaction
@@ -145,7 +152,7 @@ func (repo *TransactionRepository) QueryTransactionByDetails(stockNo string, tra
 
 	query := fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
 
-	rows, err := repo.DB.Query(query, args...)
+	rows, err := repo.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -170,12 +177,12 @@ func (repo *TransactionRepository) QueryTransactionByDetails(stockNo string, tra
 
 // updateTransaction
 func (repo *TransactionRepository) UpdateTransaction(t *model.Transaction) error {
-	_, err := repo.DB.Exec("UPDATE tblTransaction SET unitPrice = ?, totalAmount = ?, taxes = ? WHERE id = ?", t.UnitPrice, t.TotalAmount, t.Taxes, t.ID)
+	_, err := repo.db.Exec("UPDATE tblTransaction SET unitPrice = ?, totalAmount = ?, taxes = ? WHERE id = ?", t.UnitPrice, t.TotalAmount, t.Taxes, t.ID)
 	return err
 }
 
 // deleteTransaction
 func (repo *TransactionRepository) DeleteTransaction(id int) error {
-	_, err := repo.DB.Exec("DELETE FROM tblTransaction WHERE id = ?", id)
+	_, err := repo.db.Exec("DELETE FROM tblTransaction WHERE id = ?", id)
 	return err
 }

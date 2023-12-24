@@ -93,7 +93,7 @@ func importRun(cmd *cobra.Command, args []string) {
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &repository.TransactionRepository{DB: db}
+	repo := repository.NewTransactionRepository(db)
 
 	var transactions []*model.Transaction
 	for _, row := range rows {

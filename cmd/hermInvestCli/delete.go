@@ -39,7 +39,7 @@ func deleteRun(cmd *cobra.Command, args []string) {
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &repository.TransactionRepository{DB: db}
+	repo := repository.NewTransactionRepository(db)
 
 	confirm := confirmDeletion()
 	if confirm {

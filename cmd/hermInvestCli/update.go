@@ -47,7 +47,7 @@ func updateRun(cmd *cobra.Command, args []string) {
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &repository.TransactionRepository{DB: db}
+	repo := repository.NewTransactionRepository(db)
 
 	transactions, err := repo.QueryTransactionByID(transactionID)
 	if err != nil {
