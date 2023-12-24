@@ -86,7 +86,7 @@ func importRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	db, err := GetDBConnection()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}

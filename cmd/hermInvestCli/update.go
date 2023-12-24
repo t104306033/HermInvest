@@ -40,7 +40,7 @@ func updateRun(cmd *cobra.Command, args []string) {
 		fmt.Println("Error parsing float: ", err)
 	}
 
-	db, err := GetDBConnection()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
