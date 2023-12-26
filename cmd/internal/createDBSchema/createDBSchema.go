@@ -40,8 +40,8 @@ func main() {
 			quantity INTEGER NOT NULL,
 			tranType INTEGER NOT NULL,
 			unitPrice REAL NOT NULL,
-			totalAmount INTEGER,
-			taxes INTEGER,
+			totalAmount INTEGER NOT NULL,
+			taxes INTEGER NOT NULL,
 			PRIMARY KEY("id" AUTOINCREMENT)
 		)
 	`)
