@@ -62,7 +62,21 @@ func (t *Transaction) calculateTaxes() {
 func (t *Transaction) SetUnitPrice(unitPrice float64) {
 	t.UnitPrice = unitPrice
 
-	// Recalculate total amount and taxes
+	t.recalculate()
+}
+
+// SetQuantity updates the quantity of the transaction.
+// It recalculates the total amount and taxes based on the quantity.
+// The calculation of total amount and taxes are interdependent.
+func (t *Transaction) SetQuantity(quantity int) {
+	t.Quantity = quantity
+
+	t.recalculate()
+}
+
+// recalculate total amount and taxes of the transaction.
+// It will recalculates the total amount and taxes based on the model.
+func (t *Transaction) recalculate() {
 	t.calculateTotalAmount()
 	t.calculateTaxes()
 }
