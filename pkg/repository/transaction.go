@@ -30,6 +30,10 @@ func (repo *transactionRepository) prepareStmt(sqlStmt string, tx *sql.Tx) (*sql
 	return stmt, err
 }
 
+// ---
+// Transaction
+
+// createTransactionWithTx: insert transaction and return inserted id
 func (repo *transactionRepository) createTransactionWithTx(t *model.Transaction, tx *sql.Tx) (int, error) {
 	const insertSql string = "" +
 		"INSERT INTO tblTransaction" +
@@ -87,6 +91,61 @@ func (repo *transactionRepository) CreateTransactions(ts []*model.Transaction) (
 	}
 
 	return insertedIDs, nil
+}
+
+// ---
+// Transaction History
+
+// createTransactionHistoryWithTx: insert transaction and return inserted id
+func (repo *transactionRepository) createTransactionHistoryWithTx(t *model.Transaction, tx *sql.Tx) (int, error) {
+	const insertSql string = "" +
+		"INSERT INTO tblTransactionHistory" +
+		"(stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes)" +
+		"VALUES (?, ?, ?, ?, ?, ?, ?)"
+
+	stmt, err := repo.prepareStmt(insertSql, tx)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	rst, err := stmt.Exec(t.StockNo, t.Date, t.Quantity, t.TranType, t.UnitPrice, t.TotalAmount, t.Taxes)
+	if err != nil {
+		fmt.Println("Error insert database: ", err)
+		return 0, err
+	}
+
+	id, err := rst.LastInsertId()
+	if err != nil {
+		fmt.Println("Error getting inserted id: ", err)
+		return 0, err
+	}
+
+	return int(id), nil
+}
+
+// CreateTransactionHistory: insert transaction and return inserted id
+func (repo *transactionRepository) CreateTransactionHistory(t *model.Transaction) (int, error) {
+	return repo.createTransactionHistoryWithTx(t, nil)
+}
+
+// ---
+
+// FindFirstPurchase
+func (repo *transactionRepository) FindFirstPurchase(stockNo string) (*model.Transaction, error) {
+	query := "" +
+		"SELECT id, stockNo, date, tranType, quantity, unitPrice, totalAmount, taxes " +
+		"FROM tblTransaction WHERE stockNo = ? " +
+		"ORDER BY date ASC LIMIT 1"
+	row := repo.db.QueryRow(query, stockNo)
+
+	var t model.Transaction
+	err := row.Scan(&t.ID, &t.StockNo, &t.Date, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+	if err != nil {
+		return &model.Transaction{}, err
+	}
+
+	return &t, nil
 }
 
 // queryTransactionAll
@@ -178,6 +237,33 @@ func (repo *transactionRepository) QueryTransactionByDetails(stockNo string, tra
 func (repo *transactionRepository) UpdateTransaction(t *model.Transaction) error {
 	_, err := repo.db.Exec("UPDATE tblTransaction SET unitPrice = ?, totalAmount = ?, taxes = ? WHERE id = ?", t.UnitPrice, t.TotalAmount, t.Taxes, t.ID)
 	return err
+}
+
+// UpdateTransactionFields
+func (repo *transactionRepository) UpdateTransactionFields(id int, updates map[string]interface{}) error {
+	// 构建更新语句
+	query := "UPDATE tblTransaction SET "
+	values := []interface{}{}
+	i := 0
+	for field, value := range updates {
+		if i != 0 {
+			query += ", "
+		}
+		query += field + "=?"
+		values = append(values, value)
+		i++
+	}
+	query += " WHERE id=?"
+
+	values = append(values, id)
+
+	// 执行更新语句
+	_, err := repo.db.Exec(query, values...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // deleteTransaction

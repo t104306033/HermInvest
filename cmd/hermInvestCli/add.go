@@ -50,20 +50,58 @@ func addRun(cmd *cobra.Command, args []string) {
 	// init transactionRepository
 	repo := repository.NewTransactionRepository(db)
 
+	// add stock in inventory
 	t := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
-	id, err := repo.CreateTransaction(t)
-	if err != nil {
-		fmt.Println("Error creating transaction: ", err)
+
+	if t.TranType < 0 { // sale stock
+		firstPurchase, err := repo.FindFirstPurchase(stockNo)
+		if err != nil {
+			// handle find first purchase failed
+		}
+
+		displayResults([]*model.Transaction{firstPurchase})
+
+		// update stock quantity
+		updateQuantity := firstPurchase.Quantity - t.Quantity
+		firstPurchase.SetQuantity(updateQuantity)
+		updates := map[string]interface{}{
+			"Quantity":    firstPurchase.Quantity,
+			"TotalAmount": firstPurchase.TotalAmount,
+			"Taxes":       firstPurchase.Taxes,
+		}
+		err = repo.UpdateTransactionFields(firstPurchase.ID, updates)
+		if err != nil {
+			// handle update transaction failed
+		}
+
+		// record purchase history
+		purchaseHistory := firstPurchase
+		purchaseHistory.SetQuantity(t.Quantity)
+		_, err = repo.CreateTransactionHistory(purchaseHistory)
+		if err != nil {
+			// handle create transaction history failed
+		}
+
+		// record sale history
+		saleHistory := t
+		_, err = repo.CreateTransactionHistory(saleHistory)
+		if err != nil {
+			// handle create transaction history failed
+		}
+
+	} else {
+		id, err := repo.CreateTransaction(t)
+		if err != nil {
+			fmt.Println("Error creating transaction: ", err)
+		}
+		transactions, err := repo.QueryTransactionByID(id)
+		if err != nil {
+			fmt.Println("Error querying database:", err)
+		}
+
+		// Print out result
+		displayResults(transactions)
 	}
-
-	transactions, err := repo.QueryTransactionByID(id)
-	if err != nil {
-		fmt.Println("Error querying database:", err)
-	}
-
-	// Print out result
-	displayResults(transactions)
-
 }
 
 func ParseTransactionForAddCmd(args []string) (string, int, int, float64, string, error) {
