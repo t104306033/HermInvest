@@ -243,33 +243,6 @@ func (repo *transactionRepository) UpdateTransaction(id int, t *model.Transactio
 	return err
 }
 
-// UpdateTransactionFields
-func (repo *transactionRepository) UpdateTransactionFields(id int, updates map[string]interface{}) error {
-	// 构建更新语句
-	query := "UPDATE tblTransaction SET "
-	values := []interface{}{}
-	i := 0
-	for field, value := range updates {
-		if i != 0 {
-			query += ", "
-		}
-		query += field + "=?"
-		values = append(values, value)
-		i++
-	}
-	query += " WHERE id=?"
-
-	values = append(values, id)
-
-	// 执行更新语句
-	_, err := repo.db.Exec(query, values...)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // deleteTransaction
 func (repo *transactionRepository) DeleteTransaction(id int) error {
 	_, err := repo.db.Exec("DELETE FROM tblTransaction WHERE id = ?", id)
