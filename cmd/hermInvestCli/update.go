@@ -59,7 +59,7 @@ func updateRun(cmd *cobra.Command, args []string) {
 	t.SetUnitPrice(unitPrice) // update unit Price
 
 	// update db
-	err = repo.UpdateTransaction(t)
+	err = repo.UpdateTransaction(t.ID, t)
 	if err != nil {
 		fmt.Println("Error updating stock information:", err)
 		return

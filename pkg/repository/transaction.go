@@ -234,8 +234,12 @@ func (repo *transactionRepository) QueryTransactionByDetails(stockNo string, tra
 }
 
 // updateTransaction
-func (repo *transactionRepository) UpdateTransaction(t *model.Transaction) error {
-	_, err := repo.db.Exec("UPDATE tblTransaction SET unitPrice = ?, totalAmount = ?, taxes = ? WHERE id = ?", t.UnitPrice, t.TotalAmount, t.Taxes, t.ID)
+func (repo *transactionRepository) UpdateTransaction(id int, t *model.Transaction) error {
+	query := "" +
+		"UPDATE tblTransaction " +
+		"SET stockNo = ?, date = ?, quantity = ?, tranType = ?, unitPrice = ?, totalAmount = ?, taxes = ? " +
+		"WHERE id = ?"
+	_, err := repo.db.Exec(query, t.StockNo, t.Date, t.Quantity, t.TranType, t.UnitPrice, t.TotalAmount, t.Taxes, t.ID)
 	return err
 }
 

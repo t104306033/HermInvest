@@ -59,17 +59,10 @@ func addRun(cmd *cobra.Command, args []string) {
 			// handle find first purchase failed
 		}
 
-		displayResults([]*model.Transaction{firstPurchase})
-
 		// update stock quantity
 		updateQuantity := firstPurchase.Quantity - t.Quantity
 		firstPurchase.SetQuantity(updateQuantity)
-		updates := map[string]interface{}{
-			"Quantity":    firstPurchase.Quantity,
-			"TotalAmount": firstPurchase.TotalAmount,
-			"Taxes":       firstPurchase.Taxes,
-		}
-		err = repo.UpdateTransactionFields(firstPurchase.ID, updates)
+		err = repo.UpdateTransaction(firstPurchase.ID, firstPurchase)
 		if err != nil {
 			// handle update transaction failed
 		}
