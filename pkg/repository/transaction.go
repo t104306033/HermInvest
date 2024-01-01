@@ -150,7 +150,7 @@ func (repo *transactionRepository) FindFirstPurchase(stockNo string) (*model.Tra
 
 // queryTransactionAll
 func (repo *transactionRepository) QueryTransactionAll() ([]*model.Transaction, error) {
-	query := `SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction`
+	query := `SELECT id, stockNo, tranType, quantity, date, unitPrice, totalAmount, taxes FROM tblTransaction`
 	rows, err := repo.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func (repo *transactionRepository) QueryTransactionAll() ([]*model.Transaction, 
 	var transactions []*model.Transaction
 	for rows.Next() {
 		var t model.Transaction
-		err := rows.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+		err := rows.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.Date, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 		if err != nil {
 			return nil, err
 		}
@@ -176,12 +176,12 @@ func (repo *transactionRepository) QueryTransactionAll() ([]*model.Transaction, 
 
 // queryTransactionByID
 func (repo *transactionRepository) QueryTransactionByID(id int) ([]*model.Transaction, error) {
-	query := `SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = ?`
+	query := `SELECT id, stockNo, tranType, quantity, date, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = ?`
 	row := repo.db.QueryRow(query, id)
 
 	var transactions []*model.Transaction
 	var t model.Transaction
-	err := row.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+	err := row.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.Date, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +208,7 @@ func (repo *transactionRepository) QueryTransactionByDetails(stockNo string, tra
 		args = append(args, date)
 	}
 
-	query := fmt.Sprintf("SELECT id, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
+	query := fmt.Sprintf("SELECT id, stockNo, tranType, quantity, date, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
 
 	rows, err := repo.db.Query(query, args...)
 	if err != nil {
@@ -219,7 +219,7 @@ func (repo *transactionRepository) QueryTransactionByDetails(stockNo string, tra
 	var transactions []*model.Transaction
 	for rows.Next() {
 		var t model.Transaction
-		err := rows.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+		err := rows.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.Date, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 		if err != nil {
 			return nil, err
 		}
