@@ -221,29 +221,13 @@ func (repo *transactionRepository) QueryInventoryTransactions(stockNo string, qu
 	return transactions, nil
 }
 
-// queryTransactionAll
-func (repo *transactionRepository) QueryTransactionAll() ([]*model.Transaction, error) {
-	query := `SELECT id, date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction`
-	rows, err := repo.db.Query(query)
+// QueryTransactionAll
+func (repo *TransactionRepositoryGorm) QueryTransactionAll() ([]*model.Transaction, error) {
+	var transactions []*model.Transaction
+	err := repo.db.Debug().Table("tblTransaction").Find(&transactions).Error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var transactions []*model.Transaction
-	for rows.Next() {
-		var t model.Transaction
-		err := rows.Scan(&t.ID, &t.Date, &t.Time, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
-		if err != nil {
-			return nil, err
-		}
-		transactions = append(transactions, &t)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
 	return transactions, nil
 }
 
@@ -261,46 +245,34 @@ func (repo *transactionRepository) QueryTransactionByID(id int) (*model.Transact
 	return &t, nil
 }
 
-// queryTransactionByDetails
-func (repo *transactionRepository) QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*model.Transaction, error) {
-	var conditions []string
-	var args []interface{}
-
-	if stockNo != "" {
-		conditions = append(conditions, "stockNo = ?")
-		args = append(args, stockNo)
-	}
-	if tranType != 0 {
-		conditions = append(conditions, "tranType = ?")
-		args = append(args, tranType)
-	}
-	if date != "" {
-		conditions = append(conditions, "date = ?")
-		args = append(args, date)
-	}
-
-	query := fmt.Sprintf("SELECT id, date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
-
-	rows, err := repo.db.Query(query, args...)
+// QueryTransactionByID
+func (repo *TransactionRepositoryGorm) QueryTransactionByID(id int) (*model.Transaction, error) {
+	var transaction *model.Transaction
+	err := repo.db.Debug().Table("tblTransaction").Take(&transaction, id).Error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	return transaction, nil
+}
 
+// QueryTransactionByDetails
+func (repo *TransactionRepositoryGorm) QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*model.Transaction, error) {
 	var transactions []*model.Transaction
-	for rows.Next() {
-		var t model.Transaction
-		err := rows.Scan(&t.ID, &t.Date, &t.Time, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
-		if err != nil {
-			return nil, err
-		}
-		transactions = append(transactions, &t)
+
+	if stockNo != "" {
+		repo.db = repo.db.Where("stockNo = ?", stockNo)
+	}
+	if tranType != 0 {
+		repo.db = repo.db.Where("tranType = ?", tranType)
+	}
+	if date != "" {
+		repo.db = repo.db.Where("date = ?", date)
 	}
 
-	if err := rows.Err(); err != nil {
+	err := repo.db.Debug().Table("tblTransaction").Find(&transactions).Error
+	if err != nil {
 		return nil, err
 	}
-
 	return transactions, nil
 }
 
@@ -334,6 +306,16 @@ func (repo *transactionRepository) DeleteTransactions(ids []int) error {
 	_, err := repo.db.Exec(query, args...)
 	return err
 
+}
+
+func (repo *TransactionRepositoryGorm) DeleteTransaction(id int) error {
+	result := repo.db.Delete(&model.Transaction{ID: id})
+	return result.Error
+}
+
+func (repo *TransactionRepositoryGorm) DeleteTransactions(ids []int) error {
+	result := repo.db.Delete(&model.Transaction{}, "id IN ?", ids)
+	return result.Error
 }
 
 // MoveInventoryToTransactionHistorys

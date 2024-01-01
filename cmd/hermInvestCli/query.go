@@ -49,14 +49,13 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	tranType, _ := cmd.Flags().GetInt("type")
 	date, _ := cmd.Flags().GetString("date")
 
-	db, err := repository.GetDBConnection()
+	db, err := repository.GetDBConnectionGorm()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
-	defer db.Close()
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepository(db)
+	repo := repository.NewTransactionRepositoryGorm(db)
 
 	var transactions []*model.Transaction
 	var transactionsErr error
@@ -71,9 +70,9 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	}
 	if transactionsErr != nil {
 		fmt.Println("Error querying database:", transactionsErr)
+	} else {
+		displayResults(transactions)
 	}
-
-	displayResults(transactions)
 
 	return nil
 }
@@ -81,6 +80,6 @@ func queryRun(cmd *cobra.Command, args []string) error {
 func displayResults(transactions []*model.Transaction) {
 	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
 	for _, t := range transactions {
-		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.ID, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
+		fmt.Printf("%d,\t%8s,\t%4d,\t%11d,\t%10.2f,\t%12d,\t%5d\n", t.ID, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
 	}
 }

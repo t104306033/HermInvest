@@ -40,14 +40,22 @@ func updateRun(cmd *cobra.Command, args []string) {
 		fmt.Println("Error parsing float: ", err)
 	}
 
-	db, err := repository.GetDBConnection()
+	db, err := repository.GetDBConnectionGorm()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
-	defer db.Close()
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepository(db)
+	repo := repository.NewTransactionRepositoryGorm(db)
+
+	dbNative, err := repository.GetDBConnection()
+	if err != nil {
+		fmt.Println("Error geting DB connection: ", err)
+	}
+	defer dbNative.Close()
+
+	// init transactionRepository
+	repoNative := repository.NewTransactionRepository(dbNative)
 
 	t, err := repo.QueryTransactionByID(transactionID)
 	if err != nil {
@@ -58,7 +66,7 @@ func updateRun(cmd *cobra.Command, args []string) {
 	t.SetUnitPrice(unitPrice) // update unit Price
 
 	// update db
-	err = repo.UpdateTransaction(t.ID, t)
+	err = repoNative.UpdateTransaction(t.ID, t)
 	if err != nil {
 		fmt.Println("Error updating stock information:", err)
 		return
