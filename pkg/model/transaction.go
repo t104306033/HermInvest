@@ -24,15 +24,15 @@ func NewTransactionRecord(date, time, stockNo string, tranType, quantity int, un
 
 // Transaction represents a share transaction.
 type Transaction struct {
-	ID          int
-	Date        string
-	Time        string
-	StockNo     string
-	TranType    int
-	Quantity    int
-	UnitPrice   float64
-	TotalAmount int
-	Taxes       int
+	ID          int     `gorm:"column:id"`
+	Date        string  `gorm:"column:date"`
+	Time        string  `gorm:"column:time"`
+	StockNo     string  `gorm:"column:stockNo"`
+	TranType    int     `gorm:"column:tranType"`
+	Quantity    int     `gorm:"column:quantity"`
+	UnitPrice   float64 `gorm:"column:unitPrice"`
+	TotalAmount int     `gorm:"column:totalAmount"`
+	Taxes       int     `gorm:"column:taxes"`
 }
 
 // NewTransactionFromDB creates a new Transaction object from database records.
