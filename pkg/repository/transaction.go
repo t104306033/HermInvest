@@ -317,12 +317,12 @@ func (repo *transactionRepository) DeleteTransactions(ids []int) error {
 }
 
 func (repo *TransactionRepositoryGorm) DeleteTransaction(id int) error {
-	result := repo.db.Delete(&model.Transaction{ID: id})
+	result := repo.db.Table("tblTransaction").Delete(&model.Transaction{ID: id})
 	return result.Error
 }
 
 func (repo *TransactionRepositoryGorm) DeleteTransactions(ids []int) error {
-	result := repo.db.Delete(&model.Transaction{}, "id IN ?", ids)
+	result := repo.db.Table("tblTransaction").Delete(&model.Transaction{}, "id IN ?", ids)
 	return result.Error
 }
 

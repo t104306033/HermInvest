@@ -32,14 +32,13 @@ func deleteRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	db, err := repository.GetDBConnection()
+	db, err := repository.GetDBConnectionGorm()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
-	defer db.Close()
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepository(db)
+	repo := repository.NewTransactionRepositoryGorm(db)
 
 	confirm := confirmDeletion()
 	if confirm {
