@@ -286,6 +286,14 @@ func (repo *transactionRepository) UpdateTransaction(id int, t *model.Transactio
 	return err
 }
 
+func (repo *TransactionRepositoryGorm) UpdateTransaction(id int, t *model.Transaction) error {
+	err := repo.db.Debug().Table("tblTransaction").Updates(t).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // deleteTransaction
 func (repo *transactionRepository) DeleteTransaction(id int) error {
 	_, err := repo.db.Exec("DELETE FROM tblTransaction WHERE id = ?", id)
