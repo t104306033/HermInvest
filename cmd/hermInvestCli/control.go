@@ -91,15 +91,6 @@ func transactionReGenerator() {
 	// init transactionRepository
 	repo := repository.NewTransactionRepositoryGorm(db)
 
-	dbNative, err := repository.GetDBConnection()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
-	defer dbNative.Close()
-
-	// init transactionRepository
-	repoNative := repository.NewTransactionRepository(dbNative)
-
 	// capitalReductionTransactionGenerator()
 
 	repo.DeleteAlltblTransaction()
@@ -112,7 +103,7 @@ func transactionReGenerator() {
 	for _, tr := range trs {
 		newTransaction := model.NewTransactionFromInput(
 			tr.Date, tr.Time, tr.StockNo, tr.TranType, tr.Quantity, tr.UnitPrice)
-		t, err := repoNative.AddTransaction(newTransaction)
+		t, err := repo.AddTransaction(newTransaction)
 		if err != nil {
 			fmt.Println("Error adding transaction: ", err)
 		} else if t != nil {
@@ -145,5 +136,5 @@ func test() {
 }
 
 func controlRun(cmd *cobra.Command, args []string) {
-	test()
+	transactionReGenerator()
 }
