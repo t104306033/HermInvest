@@ -24,7 +24,7 @@ func capitalReductionTransactionGenerator() {
 	}
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepositoryGorm(db)
+	repo := repository.NewTransactionRepository(db)
 
 	repo.DeleteAllTransactionRecordSys()
 
@@ -89,7 +89,7 @@ func transactionReGenerator() {
 	}
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepositoryGorm(db)
+	repo := repository.NewTransactionRepository(db)
 
 	// capitalReductionTransactionGenerator()
 
@@ -120,7 +120,7 @@ func test() {
 	}
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepositoryGorm(db)
+	repo := repository.NewTransactionRepository(db)
 
 	newTransactions := make([]*model.Transaction, 0)
 	newTransaction1 := model.NewTransactionFromInput(

@@ -96,7 +96,7 @@ func importRun(cmd *cobra.Command, args []string) {
 	}
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepositoryGorm(db)
+	repo := repository.NewTransactionRepository(db)
 
 	var transactions []*model.Transaction
 	for _, row := range rows {

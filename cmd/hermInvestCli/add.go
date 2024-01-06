@@ -47,7 +47,7 @@ func addRun(cmd *cobra.Command, args []string) {
 	}
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepositoryGorm(db)
+	repo := repository.NewTransactionRepository(db)
 
 	// add stock in inventory
 	// 1. new transaction from input

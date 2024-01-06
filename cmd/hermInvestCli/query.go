@@ -55,7 +55,7 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepositoryGorm(db)
+	repo := repository.NewTransactionRepository(db)
 
 	var transactions []*model.Transaction
 	var transactionsErr error

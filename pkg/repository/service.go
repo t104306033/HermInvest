@@ -12,7 +12,7 @@ import (
 // addTransactionTailRecursion add new transaction records with tail recursion,
 // When adding, inventory and transaction history, especially write-offs and
 // tails, need to be considered.
-func (repo *TransactionRepositoryGorm) addTransactionTailRecursion(newTransaction *model.Transaction, remainingQuantity int) (*model.Transaction, error) {
+func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *model.Transaction, remainingQuantity int) (*model.Transaction, error) {
 	// Principles:
 	// 1. Ensure that each transaction has a corresponding transaction record.
 	// 2. Update inventory quantities based on transactions, including adding,
@@ -142,7 +142,7 @@ func (repo *TransactionRepositoryGorm) addTransactionTailRecursion(newTransactio
 // AddTransaction add the transaction from the input to the inventory.
 // It will add or update transactions in the inventory and add history.
 // Return the modified transaction record in the inventory
-func (repo *TransactionRepositoryGorm) AddTransaction(newTransaction *model.Transaction) (*model.Transaction, error) {
+func (repo *TransactionRepository) AddTransaction(newTransaction *model.Transaction) (*model.Transaction, error) {
 	remainingQuantity := newTransaction.Quantity
 	return repo.addTransactionTailRecursion(newTransaction, remainingQuantity)
 }
