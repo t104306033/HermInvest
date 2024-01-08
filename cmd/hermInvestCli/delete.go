@@ -32,7 +32,7 @@ func deleteRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	db, err := repository.GetDBConnectionGorm()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}

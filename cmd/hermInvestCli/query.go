@@ -49,7 +49,7 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	tranType, _ := cmd.Flags().GetInt("type")
 	date, _ := cmd.Flags().GetString("date")
 
-	db, err := repository.GetDBConnectionGorm()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}

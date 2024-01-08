@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func GetDBConnectionGorm() (*gorm.DB, error) {
+func GetDBConnection() (*gorm.DB, error) {
 	// TODO: extract DB connection to configuration
 	// sqlite3 connection with foreign keys enabled
 	// TODO: need to check db file, if not exist, exit. otherwise ... db will be created

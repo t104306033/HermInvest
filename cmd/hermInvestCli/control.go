@@ -18,7 +18,7 @@ func init() {
 }
 
 func capitalReductionTransactionGenerator() {
-	db, err := repository.GetDBConnectionGorm()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
@@ -83,7 +83,7 @@ func capitalReductionTransactionGenerator() {
 }
 
 func transactionReGenerator() {
-	db, err := repository.GetDBConnectionGorm()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
@@ -114,7 +114,7 @@ func transactionReGenerator() {
 }
 
 func test() {
-	db, err := repository.GetDBConnectionGorm()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
@@ -136,5 +136,5 @@ func test() {
 }
 
 func controlRun(cmd *cobra.Command, args []string) {
-	transactionReGenerator()
+	capitalReductionTransactionGenerator()
 }
