@@ -3,6 +3,7 @@ package main
 import (
 	"HermInvest/pkg/model"
 	"HermInvest/pkg/repository"
+	"HermInvest/pkg/service"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -91,6 +92,8 @@ func transactionReGenerator() {
 	// init transactionRepository
 	repo := repository.NewTransactionRepository(db)
 
+	serv := service.NewTransactionService(repo)
+
 	// capitalReductionTransactionGenerator()
 
 	repo.DeleteAlltblTransaction()
@@ -103,7 +106,7 @@ func transactionReGenerator() {
 	for _, tr := range trs {
 		newTransaction := model.NewTransactionFromInput(
 			tr.Date, tr.Time, tr.StockNo, tr.TranType, tr.Quantity, tr.UnitPrice)
-		t, err := repo.AddTransaction(newTransaction)
+		t, err := serv.AddTransaction(newTransaction)
 		if err != nil {
 			fmt.Println("Error adding transaction: ", err)
 		} else if t != nil {

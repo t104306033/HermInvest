@@ -3,6 +3,7 @@ package main
 import (
 	"HermInvest/pkg/model"
 	"HermInvest/pkg/repository"
+	"HermInvest/pkg/service"
 	"fmt"
 	"strconv"
 	"time"
@@ -49,6 +50,8 @@ func addRun(cmd *cobra.Command, args []string) {
 	// init transactionRepository
 	repo := repository.NewTransactionRepository(db)
 
+	serv := service.NewTransactionService(repo)
+
 	// add stock in inventory
 	// 1. new transaction from input
 	// 2. find the first purchase from the inventory
@@ -57,7 +60,7 @@ func addRun(cmd *cobra.Command, args []string) {
 	// TODO: service.addTransaction() AddTransactionAndUpdateInventory
 	newTransaction := model.NewTransactionFromInput(tranDate, tranTime, stockNo, tranType, quantity, unitPrice)
 
-	t, err := repo.AddTransaction(newTransaction)
+	t, err := serv.AddTransaction(newTransaction)
 	if err != nil {
 		fmt.Println("Error adding transaction: ", err)
 	} else if t != nil {

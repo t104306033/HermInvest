@@ -1,18 +1,25 @@
-package repository
+package service
 
 import (
 	"HermInvest/pkg/model"
+	"HermInvest/pkg/repository"
 	"fmt"
 
 	"gorm.io/gorm"
 )
 
-// Service Tier
+type TransactionService struct {
+	repo *repository.TransactionRepository
+}
+
+func NewTransactionService(repository *repository.TransactionRepository) *TransactionService {
+	return &TransactionService{repo: repository}
+}
 
 // addTransactionTailRecursion add new transaction records with tail recursion,
 // When adding, inventory and transaction history, especially write-offs and
 // tails, need to be considered.
-func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *model.Transaction, remainingQuantity int) (*model.Transaction, error) {
+func (serv *TransactionService) addTransactionTailRecursion(newTransaction *model.Transaction, remainingQuantity int) (*model.Transaction, error) {
 	// Principles:
 	// 1. Ensure that each transaction has a corresponding transaction record.
 	// 2. Update inventory quantities based on transactions, including adding,
@@ -36,7 +43,7 @@ func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *m
 
 	// TODO: This func should be moved to service tier.
 
-	earliestTransaction, err := repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
+	earliestTransaction, err := serv.repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("error finding first purchase: %v", err)
@@ -49,7 +56,7 @@ func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *m
 		if newTransaction.Quantity != remainingQuantity {
 			// Case F
 			newTransaction.SetQuantity(newTransaction.Quantity - remainingQuantity)
-			_, err = repo.CreateTransactionHistory(newTransaction)
+			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
 				// handle create transaction history failed
 			}
@@ -57,11 +64,11 @@ func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *m
 		}
 
 		// Case B
-		id, err := repo.CreateTransaction(newTransaction)
+		id, err := serv.repo.CreateTransaction(newTransaction)
 		if err != nil {
 			return nil, fmt.Errorf("error creating transaction: %v", err)
 		}
-		transaction, err := repo.QueryTransactionByID(id)
+		transaction, err := serv.repo.QueryTransactionByID(id)
 		if err != nil {
 			return nil, fmt.Errorf("error querying database: %v", err)
 		}
@@ -79,18 +86,18 @@ func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *m
 
 			// add transaction history
 			stockHistoryAdd.SetQuantity(remainingQuantity)
-			_, err = repo.CreateTransactionHistory(stockHistoryAdd)
+			_, err = serv.repo.CreateTransactionHistory(stockHistoryAdd)
 			if err != nil {
 				// handle create transaction history failed
 			}
-			_, err = repo.CreateTransactionHistory(newTransaction)
+			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
 				// handle create transaction history failed
 			}
 
 			// Update stock inventory
 			earliestTransaction.SetQuantity(earliestTransaction.Quantity - remainingQuantity)
-			err := repo.UpdateTransaction(earliestTransaction.ID, earliestTransaction)
+			err := serv.repo.UpdateTransaction(earliestTransaction.ID, earliestTransaction)
 			if err != nil {
 				// handle update transaction failed
 			}
@@ -100,16 +107,16 @@ func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *m
 			// Case D
 
 			// add transaction history
-			_, err = repo.CreateTransactionHistory(earliestTransaction)
+			_, err = serv.repo.CreateTransactionHistory(earliestTransaction)
 			if err != nil {
 				// handle create transaction history failed
 			}
-			_, err = repo.CreateTransactionHistory(newTransaction)
+			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
 				// handle create transaction history failed
 			}
 			// delete stock inventory
-			err = repo.DeleteTransaction(earliestTransaction.ID)
+			err = serv.repo.DeleteTransaction(earliestTransaction.ID)
 			if err != nil {
 				// handle create transaction history failed
 			}
@@ -121,20 +128,20 @@ func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *m
 			// Case E
 
 			// add transaction history
-			_, err = repo.CreateTransactionHistory(earliestTransaction)
+			_, err = serv.repo.CreateTransactionHistory(earliestTransaction)
 			if err != nil {
 				// handle create transaction history failed
 			}
 
 			// delete stock inventory
-			err = repo.DeleteTransaction(earliestTransaction.ID)
+			err = serv.repo.DeleteTransaction(earliestTransaction.ID)
 			if err != nil {
 				// handle create transaction history failed
 			}
 
 			remainingQuantity = remainingQuantity - earliestTransaction.Quantity
 
-			return repo.addTransactionTailRecursion(newTransaction, remainingQuantity)
+			return serv.addTransactionTailRecursion(newTransaction, remainingQuantity)
 		}
 	}
 }
@@ -142,7 +149,7 @@ func (repo *TransactionRepository) addTransactionTailRecursion(newTransaction *m
 // AddTransaction add the transaction from the input to the inventory.
 // It will add or update transactions in the inventory and add history.
 // Return the modified transaction record in the inventory
-func (repo *TransactionRepository) AddTransaction(newTransaction *model.Transaction) (*model.Transaction, error) {
+func (serv *TransactionService) AddTransaction(newTransaction *model.Transaction) (*model.Transaction, error) {
 	remainingQuantity := newTransaction.Quantity
-	return repo.addTransactionTailRecursion(newTransaction, remainingQuantity)
+	return serv.addTransactionTailRecursion(newTransaction, remainingQuantity)
 }
