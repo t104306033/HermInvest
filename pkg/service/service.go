@@ -9,10 +9,10 @@ import (
 )
 
 type TransactionService struct {
-	repo *repository.TransactionRepository
+	repo *repository.Repository
 }
 
-func NewTransactionService(repository *repository.TransactionRepository) *TransactionService {
+func NewTransactionService(repository *repository.Repository) *TransactionService {
 	return &TransactionService{repo: repository}
 }
 
