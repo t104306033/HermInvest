@@ -235,18 +235,7 @@ func (repo *repository) CreateCashDividendRecord(cd *model.ExDividend) error {
 	return nil
 }
 
-// QueryTransactionRecordByStockNo
-func (repo *repository) QueryTransactionRecordByStockNo(stockNo string, date string) ([]*model.TransactionRecord, error) {
-	var transactionRecords []*model.TransactionRecord
-	err := repo.db.Table("tblTransactionRecord").Where("stockNo = ? and date < ?", stockNo, date).Find(&transactionRecords).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return transactionRecords, nil
-}
-
-// QueryTransactionRecordUnion
+// QueryTransactionRecordAll
 func (repo *repository) QueryTransactionRecordAll() ([]*model.TransactionRecord, error) {
 	var transactionRecords []*model.TransactionRecord
 	err := repo.db.Table("tblTransactionRecord").Find(&transactionRecords).Error
@@ -258,28 +247,10 @@ func (repo *repository) QueryTransactionRecordAll() ([]*model.TransactionRecord,
 	return transactionRecords, nil
 }
 
-// QueryTransactionRecordUnion
-func (repo *repository) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
-	// SQLite seems to help you sort items by primary key when you query via UNION keyword.
-	// Or you can add ORDER keyword in the last line to sort it.
-	var transactionRecords []*model.TransactionRecord
-	err := repo.db.Raw(`
-	SELECT date, time, stockNo, tranType, quantity, unitPrice
-	FROM tblTransactionRecord
-	UNION SELECT * FROM tblTransactionRecordSys
-	`).Scan(&transactionRecords).Error
-
-	if err != nil {
-		return nil, nil
-	}
-
-	return transactionRecords, nil
-}
-
-// QueryTransactionRecordSys
+// QueryTransactionRecordSysAll
 func (repo *repository) QueryTransactionRecordSysAll() ([]*model.TransactionRecord, error) {
 	var transactionRecords []*model.TransactionRecord
-	err := repo.db.Table("tblTransactionRecordSys").Find(&transactionRecords).Error
+	err := repo.db.Find(&transactionRecords).Error
 
 	if err != nil {
 		return nil, nil
