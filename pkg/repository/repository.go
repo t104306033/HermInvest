@@ -39,7 +39,7 @@ func (repo *repository) Rollback() *gorm.DB {
 
 // CreateTransaction: insert transaction and return inserted id
 func (repo *repository) CreateTransaction(t *model.Transaction) (int, error) {
-	result := repo.db.Table("tblTransaction").Create(&t)
+	result := repo.db.Create(&t)
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -49,7 +49,7 @@ func (repo *repository) CreateTransaction(t *model.Transaction) (int, error) {
 
 // CreateTransactions: insert transactions and return inserted ids
 func (repo *repository) CreateTransactions(ts []*model.Transaction) ([]int, error) {
-	result := repo.db.Table("tblTransaction").Create(&ts)
+	result := repo.db.Create(&ts)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -64,7 +64,7 @@ func (repo *repository) CreateTransactions(ts []*model.Transaction) ([]int, erro
 
 func (repo *repository) FindEarliestTransactionByStockNo(stockNo string) (*model.Transaction, error) {
 	var transaction model.Transaction
-	err := repo.db.Table("tblTransaction").Where("stockNo = ?", stockNo).
+	err := repo.db.Where("stockNo = ?", stockNo).
 		Order("date ASC, time ASC").First(&transaction).Error
 	if err != nil {
 		return &model.Transaction{}, err
@@ -76,7 +76,7 @@ func (repo *repository) FindEarliestTransactionByStockNo(stockNo string) (*model
 // QueryTransactionAll
 func (repo *repository) QueryTransactionAll() ([]*model.Transaction, error) {
 	var transactions []*model.Transaction
-	err := repo.db.Table("tblTransaction").Find(&transactions).Error
+	err := repo.db.Find(&transactions).Error
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (repo *repository) QueryTransactionAll() ([]*model.Transaction, error) {
 // QueryTransactionByID
 func (repo *repository) QueryTransactionByID(id int) (*model.Transaction, error) {
 	var transaction *model.Transaction
-	err := repo.db.Table("tblTransaction").Take(&transaction, id).Error
+	err := repo.db.Take(&transaction, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (repo *repository) QueryTransactionByDetails(stockNo string, tranType int, 
 		repo.db = repo.db.Where("date = ?", date)
 	}
 
-	err := repo.db.Table("tblTransaction").Find(&transactions).Error
+	err := repo.db.Find(&transactions).Error
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (repo *repository) QueryTransactionByDetails(stockNo string, tranType int, 
 
 // updateTransaction
 func (repo *repository) UpdateTransaction(id int, t *model.Transaction) error {
-	err := repo.db.Table("tblTransaction").Updates(t).Error
+	err := repo.db.Updates(t).Error
 	if err != nil {
 		return err
 	}
@@ -124,12 +124,12 @@ func (repo *repository) UpdateTransaction(id int, t *model.Transaction) error {
 }
 
 func (repo *repository) DeleteTransaction(id int) error {
-	result := repo.db.Table("tblTransaction").Delete(&model.Transaction{ID: id})
+	result := repo.db.Delete(&model.Transaction{ID: id})
 	return result.Error
 }
 
 func (repo *repository) DeleteTransactions(ids []int) error {
-	result := repo.db.Table("tblTransaction").Delete(&model.Transaction{}, "id IN ?", ids)
+	result := repo.db.Delete(&model.Transaction{}, "id IN ?", ids)
 	return result.Error
 }
 
@@ -196,7 +196,7 @@ func (repo *repository) DropTable(tablename string) error {
 // QueryCapitalReductionAll
 func (repo *repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
 	var capitalReductions []*model.CapitalReduction
-	if err := repo.db.Table("tblCapitalReduction").Find(&capitalReductions).Error; err != nil {
+	if err := repo.db.Find(&capitalReductions).Error; err != nil {
 		return nil, err
 	}
 
@@ -206,7 +206,7 @@ func (repo *repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, e
 // QueryCapitalReductionAll
 func (repo *repository) QueryDividendAll() ([]*model.ExDividend, error) {
 	var exDividends []*model.ExDividend
-	if err := repo.db.Table("tblDividend").Find(&exDividends).Error; err != nil {
+	if err := repo.db.Find(&exDividends).Error; err != nil {
 		return nil, err
 	}
 
@@ -219,7 +219,7 @@ func (repo *repository) QueryDividendAll() ([]*model.ExDividend, error) {
 
 // CreateTransactionRecordSys
 func (repo *repository) CreateTransactionRecordSys(tr *model.TransactionRecord) error {
-	if err := repo.db.Table("tblTransactionRecordSys").Create(tr).Error; err != nil {
+	if err := repo.db.Create(tr).Error; err != nil {
 		return err
 	}
 
@@ -348,9 +348,7 @@ func (repo *repository) QueryUnionNote() {
 // QueryTransactionRecordSys
 func (repo *repository) QueryTransactionPreload() ([]*model.Transaction, error) {
 	var transactions []*model.Transaction
-	err := repo.db.Preload("StockMapping", func(db *gorm.DB) *gorm.DB {
-		return db.Table("tblStockMapping") // Temporarily set table name for Preload
-	}).Table("tblTransaction").Take(&transactions).Error
+	err := repo.db.Preload("StockMapping").Take(&transactions).Error
 	if err != nil {
 		return nil, nil
 	}

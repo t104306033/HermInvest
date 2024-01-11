@@ -26,6 +26,10 @@ func NewCashDividendRecord(yq, stockNo, exDividendDate, distributionDate string,
 	}
 }
 
+func (ed *ExDividend) TableName() string {
+	return "tblDividend" // default table name
+}
+
 func (ed *ExDividend) CalcTransactionRecords(totalQuantity int) *TransactionRecord {
 	distributionRecord := ed.calcDistributionRecord(totalQuantity)
 	return distributionRecord

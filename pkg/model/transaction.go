@@ -24,6 +24,10 @@ func NewTransactionRecord(date, time, stockNo string, tranType, quantity int, un
 	}
 }
 
+func (tr *TransactionRecord) TableName() string {
+	return "tblTransactionRecordSys" // default table name
+}
+
 func SumQuantityUnitPrice(remainingTrs []*TransactionRecord) (int, float64) {
 	var totalQuantity, totalAmount int
 	for _, tr := range remainingTrs {
@@ -104,6 +108,10 @@ func NewTransactionFromInput(
 	return t
 }
 
+func (t *Transaction) TableName() string {
+	return "tblTransaction" // default table name
+}
+
 // calculateTotalAmount calculates the total amount based on transaction details.
 func (t *Transaction) calculateTotalAmount() {
 	t.TotalAmount = int(float64(t.Quantity) * t.UnitPrice)
@@ -145,6 +153,6 @@ type StockMapping struct {
 	StockName string `gorm:"column:stockName"`
 }
 
-// func (sp *StockMapping) TableName() string {
-// 	return "tblStockMapping" // default table name
-// }
+func (sp *StockMapping) TableName() string {
+	return "tblStockMapping" // default table name
+}
