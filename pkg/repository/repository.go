@@ -344,3 +344,16 @@ func (repo *repository) QueryUnionNote() {
 
 	fmt.Println(sql)
 }
+
+// QueryTransactionRecordSys
+func (repo *repository) QueryTransactionPreload() ([]*model.Transaction, error) {
+	var transactions []*model.Transaction
+	err := repo.db.Preload("StockMapping", func(db *gorm.DB) *gorm.DB {
+		return db.Table("tblStockMapping") // Temporarily set table name for Preload
+	}).Table("tblTransaction").Take(&transactions).Error
+	if err != nil {
+		return nil, nil
+	}
+
+	return transactions, nil
+}
