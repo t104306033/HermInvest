@@ -73,32 +73,6 @@ func transactionPage(c *gin.Context) {
 	c.Data(http.StatusOK, "text/html", pageHTML)
 }
 
-// func displayResultsHMTL(transactions []*model.Transaction) string {
-// 	// Create a table HTML string
-// 	tableHTML := "<table>"
-// 	tableHTML += "<tr><th>ID</th><th>Stock No</th><th>Type</th><th>Qty(shares)</th><th>Unit Price</th><th>Total Amount</th><th>Taxes</th></tr>"
-
-// 	// Iterate through transactions and add rows to the table
-// 	for _, transaction := range transactions {
-// 		tableHTML += "<tr>"
-// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.ID)
-// 		tableHTML += fmt.Sprintf("<td>%s</td>", transaction.StockNo)
-// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.TranType)
-// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.Quantity)
-// 		tableHTML += fmt.Sprintf("<td>%.2f</td>", transaction.UnitPrice)
-// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.TotalAmount)
-// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.Taxes)
-// 		tableHTML += "</tr>"
-// 	}
-
-// 	tableHTML += "</table>"
-
-// 	// Print the table HTML to the console for debugging (remove this in production)
-// 	// fmt.Println(tableHTML)
-
-// 	return tableHTML
-// }
-
 func open(url string) error { // open url from browser
 	var cmd string
 	var args []string
