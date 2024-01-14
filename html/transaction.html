@@ -4,7 +4,17 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>HermInvest</title>
+        <title>HermInvest</title>  
+        <!-- import jQuery, Bootstrap Table CSS, and JavaScript -->
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.js"></script>
+        <style>
+            .bootstrap-table.bootstrap4 {
+                max-width: 1000px;
+            }
+        </style>
     </head>
     <body>
         <ul>
@@ -15,6 +25,25 @@
         </ul>
         <h1>Transaction</h1>
         <p>Track stock inventory.</p>
-        <TransactionTable>
+        <!-- Bootstrap Table -->
+        <table data-toggle="table" data-url="/api/transaction" data-pagination="true" data-search="true">
+            <thead>
+                <tr>
+                    <th data-field="ID">ID</th>
+                    <th data-field="StockNo">Stock No</th>
+                    <th data-field="TranType">Type</th>
+                    <th data-field="Quantity">Qty(shares)</th>
+                    <th data-field="UnitPrice" data-formatter="formatUnitPrice">Unit Price</th>
+                    <th data-field="TotalAmount">Total Amount</th>
+                    <th data-field="Taxes">Taxes</th>
+                </tr>
+            </thead>
+        </table>
+
+        <script>
+            function formatUnitPrice(value) {
+                return parseFloat(value).toFixed(2);
+            }
+        </script>
     </body>
 </html>

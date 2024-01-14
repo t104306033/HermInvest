@@ -1,7 +1,6 @@
 package main
 
 import (
-	"HermInvest/pkg/model"
 	"HermInvest/pkg/service"
 	"fmt"
 	"log"
@@ -9,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
@@ -29,6 +27,7 @@ func webRun(cmd *cobra.Command, args []string) {
 
 	router.GET("/", homePage)
 	router.GET("/transaction", transactionPage)
+	router.GET("/api/transaction", apiGetTransactions)
 
 	open("http://127.0.0.1:9453/transaction")
 
@@ -48,57 +47,57 @@ func homePage(c *gin.Context) {
 	c.Data(http.StatusOK, "text/html", pageHTML)
 }
 
-func transactionPage(c *gin.Context) {
+func apiGetTransactions(c *gin.Context) {
+	// transactions := []*model.Transaction{
+	// 	{ID: 1, StockNo: "ABC", TranType: 1, Quantity: 100, UnitPrice: 10.50, TotalAmount: 1050, Taxes: 50},
+	// 	{ID: 2, StockNo: "XYZ", TranType: 2, Quantity: 50, UnitPrice: 20.25, TotalAmount: 1012, Taxes: 12},
+	// }
 	serv := service.InitializeService()
 
 	transactions, err := serv.QueryTransactionAll()
 	if err != nil {
 		fmt.Println("Error querying database:", err)
 	}
-	// else {
-	// 	displayResults(transactions) // for loop print transactions
-	// }
 
-	tableHTML := displayResultsHMTL(transactions)
+	c.JSON(http.StatusOK, transactions)
+}
+
+func transactionPage(c *gin.Context) {
 
 	var pageHTML []byte
-	pageHTML, err = os.ReadFile("html/transaction.html")
+	pageHTML, err := os.ReadFile("html/transaction.html")
 	if err != nil {
 		log.Fatal("os.ReadFile: ", err)
 	}
 
-	// Insert the transaction table HTML into the template
-	pageHTMLString := string(pageHTML)
-	pageHTMLString = strings.Replace(pageHTMLString, "<TransactionTable>", tableHTML, 1)
-
-	c.Data(http.StatusOK, "text/html", []byte(pageHTMLString))
+	c.Data(http.StatusOK, "text/html", pageHTML)
 }
 
-func displayResultsHMTL(transactions []*model.Transaction) string {
-	// Create a table HTML string
-	tableHTML := "<table>"
-	tableHTML += "<tr><th>ID</th><th>Stock No</th><th>Type</th><th>Qty(shares)</th><th>Unit Price</th><th>Total Amount</th><th>Taxes</th></tr>"
+// func displayResultsHMTL(transactions []*model.Transaction) string {
+// 	// Create a table HTML string
+// 	tableHTML := "<table>"
+// 	tableHTML += "<tr><th>ID</th><th>Stock No</th><th>Type</th><th>Qty(shares)</th><th>Unit Price</th><th>Total Amount</th><th>Taxes</th></tr>"
 
-	// Iterate through transactions and add rows to the table
-	for _, transaction := range transactions {
-		tableHTML += "<tr>"
-		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.ID)
-		tableHTML += fmt.Sprintf("<td>%s</td>", transaction.StockNo)
-		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.TranType)
-		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.Quantity)
-		tableHTML += fmt.Sprintf("<td>%.2f</td>", transaction.UnitPrice)
-		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.TotalAmount)
-		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.Taxes)
-		tableHTML += "</tr>"
-	}
+// 	// Iterate through transactions and add rows to the table
+// 	for _, transaction := range transactions {
+// 		tableHTML += "<tr>"
+// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.ID)
+// 		tableHTML += fmt.Sprintf("<td>%s</td>", transaction.StockNo)
+// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.TranType)
+// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.Quantity)
+// 		tableHTML += fmt.Sprintf("<td>%.2f</td>", transaction.UnitPrice)
+// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.TotalAmount)
+// 		tableHTML += fmt.Sprintf("<td>%d</td>", transaction.Taxes)
+// 		tableHTML += "</tr>"
+// 	}
 
-	tableHTML += "</table>"
+// 	tableHTML += "</table>"
 
-	// Print the table HTML to the console for debugging (remove this in production)
-	// fmt.Println(tableHTML)
+// 	// Print the table HTML to the console for debugging (remove this in production)
+// 	// fmt.Println(tableHTML)
 
-	return tableHTML
-}
+// 	return tableHTML
+// }
 
 func open(url string) error { // open url from browser
 	var cmd string
