@@ -3,14 +3,15 @@ package main
 import (
 	"HermInvest/pkg/model"
 	"HermInvest/pkg/service"
-	"bytes"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 )
 
@@ -24,28 +25,30 @@ func init() {
 }
 
 func webRun(cmd *cobra.Command, args []string) {
-	http.HandleFunc("/", homePage)
-	http.HandleFunc("/transaction", transactionPage)
+	router := gin.Default()
+
+	router.GET("/", homePage)
+	router.GET("/transaction", transactionPage)
 
 	open("http://127.0.0.1:9453/transaction")
 
-	err := http.ListenAndServe(":9453", nil)
+	err := router.Run(":9453")
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
 
-func homePage(w http.ResponseWriter, _ *http.Request) {
+func homePage(c *gin.Context) {
 	var pageHTML []byte
 	pageHTML, err := os.ReadFile("html/home.html")
 	if err != nil {
 		log.Fatal("os.ReadFile: ", err)
 	}
 
-	w.Write([]byte(pageHTML))
+	c.Data(http.StatusOK, "text/html", pageHTML)
 }
 
-func transactionPage(w http.ResponseWriter, _ *http.Request) {
+func transactionPage(c *gin.Context) {
 	serv := service.InitializeService()
 
 	transactions, err := serv.QueryTransactionAll()
@@ -64,22 +67,11 @@ func transactionPage(w http.ResponseWriter, _ *http.Request) {
 		log.Fatal("os.ReadFile: ", err)
 	}
 
-	// Split the HTML byte slice into two parts
-	var firstPart, secondPart []byte
-	splitIndex := bytes.Index(pageHTML, []byte("<TransactionTable>"))
-	if splitIndex != -1 {
-		firstPart = pageHTML[:splitIndex]
-		secondPart = pageHTML[splitIndex+len("<TransactionTable>"):]
-	} else {
-		// Handle the case where the "here" marker is not found
-		log.Fatal("Marker '<TransactionTable>' not found in HTML template")
-	}
+	// Insert the transaction table HTML into the template
+	pageHTMLString := string(pageHTML)
+	pageHTMLString = strings.Replace(pageHTMLString, "<TransactionTable>", tableHTML, 1)
 
-	// Insert the transaction table HTML between the two parts
-	combinedHTML := append(firstPart, tableHTML...)
-	combinedHTML = append(combinedHTML, secondPart...)
-
-	w.Write([]byte(combinedHTML))
+	c.Data(http.StatusOK, "text/html", []byte(pageHTMLString))
 }
 
 func displayResultsHMTL(transactions []*model.Transaction) string {
