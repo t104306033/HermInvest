@@ -3,6 +3,7 @@ package main
 import (
 	"HermInvest/pkg/model"
 	"HermInvest/pkg/repository"
+	"database/sql"
 	"fmt"
 	"strconv"
 	"time"
@@ -51,50 +52,124 @@ func addRun(cmd *cobra.Command, args []string) {
 	repo := repository.NewTransactionRepository(db)
 
 	// add stock in inventory
-	t := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+	// 1. new transaction from input
+	// 2. find the first purchase from the inventory
+	// 3. check the transaction type of new transaction and first purchase
 
-	if t.TranType < 0 { // sale stock
-		firstPurchase, err := repo.FindFirstPurchase(stockNo)
+	// TODO: service.addTransaction() AddTransactionAndUpdateInventory
+	newTransaction := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+
+	// Find the first purchase from the inventory
+	earliestTransaction, err := repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
+	if err == sql.ErrNoRows {
+		// If no first purchase found, set TranType and handle accordingly
+		earliestTransaction.TranType = newTransaction.TranType
+	} else if err != nil {
+		fmt.Println("Error finding first purchase:", err)
+		return
+	}
+
+	if earliestTransaction.TranType == newTransaction.TranType {
+		// add stock in the inventory directly
+		id, err := repo.CreateTransaction(newTransaction)
 		if err != nil {
-			// handle find first purchase failed
+			fmt.Println("Error creating transaction: ", err)
+			return
+		}
+		transactions, err := repo.QueryTransactionByID(id)
+		if err != nil {
+			fmt.Println("Error querying database:", err)
+			return
 		}
 
-		// update stock quantity
-		updateQuantity := firstPurchase.Quantity - t.Quantity
-		firstPurchase.SetQuantity(updateQuantity)
-		err = repo.UpdateTransaction(firstPurchase.ID, firstPurchase)
+		// Print out result
+		displayResults(transactions)
+
+		return
+	}
+
+	inventoryTransactions, err := repo.QueryInventoryTransactions(newTransaction.StockNo, newTransaction.Quantity)
+	if err != nil {
+		// handle query old purchase failed
+		fmt.Println("Error querying old purchase:", err)
+		return
+	}
+
+	remainingQuantity := newTransaction.Quantity
+	for _, t := range inventoryTransactions {
+		remainingQuantity -= t.Quantity
+	}
+
+	err = repo.MoveInventoryToTransactionHistorys(inventoryTransactions)
+	if err != nil {
+		fmt.Println("Error moving inventory to transaction history:", err)
+		return
+	}
+
+	if remainingQuantity > 0 {
+		// Find the first purchase again after old purchases are processed
+		earliestTransaction, err := repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				fmt.Println("add stock in the inventory directly", err)
+
+				// record newTransaction to history
+				newTransaction.SetQuantity(newTransaction.Quantity - remainingQuantity)
+				_, err = repo.CreateTransactionHistory(newTransaction)
+				if err != nil {
+					// handle create transaction history failed
+				}
+
+				newTransaction.SetQuantity(remainingQuantity)
+				id, err := repo.CreateTransaction(newTransaction)
+				if err != nil {
+					fmt.Println("Error creating transaction: ", err)
+					return
+				}
+
+				transactions, err := repo.QueryTransactionByID(id)
+				if err != nil {
+					fmt.Println("Error querying database:", err)
+					return
+				}
+				// Print out result
+				displayResults(transactions)
+
+				fmt.Println(newTransaction.Quantity, remainingQuantity)
+
+			} else {
+				// Pass, can't find first purchase, cause no stock in the inventory
+				fmt.Println("Error finding earliest transaction:", err)
+			}
+			return
+		}
+
+		if earliestTransaction.Quantity < remainingQuantity {
+			fmt.Println("Not Impelment yet: earliestTransaction.Quantity < remainingQuantity: ", err)
+			return
+		}
+
+		// Update the quantity of the first purchase
+		earliestTransaction.SetQuantity(earliestTransaction.Quantity - remainingQuantity)
+		err = repo.UpdateTransaction(earliestTransaction.ID, earliestTransaction)
 		if err != nil {
 			// handle update transaction failed
 		}
 
 		// record purchase history
-		purchaseHistory := firstPurchase
-		purchaseHistory.SetQuantity(t.Quantity)
-		_, err = repo.CreateTransactionHistory(purchaseHistory)
+		earliestTransaction.SetQuantity(remainingQuantity)
+		_, err = repo.CreateTransactionHistory(earliestTransaction)
 		if err != nil {
 			// handle create transaction history failed
 		}
-
-		// record sale history
-		saleHistory := t
-		_, err = repo.CreateTransactionHistory(saleHistory)
-		if err != nil {
-			// handle create transaction history failed
-		}
-
-	} else {
-		id, err := repo.CreateTransaction(t)
-		if err != nil {
-			fmt.Println("Error creating transaction: ", err)
-		}
-		transactions, err := repo.QueryTransactionByID(id)
-		if err != nil {
-			fmt.Println("Error querying database:", err)
-		}
-
-		// Print out result
-		displayResults(transactions)
 	}
+
+	// record newTransaction to history
+	_, err = repo.CreateTransactionHistory(newTransaction)
+	if err != nil {
+		// handle create transaction history failed
+	}
+
 }
 
 func ParseTransactionForAddCmd(args []string) (string, int, int, float64, string, error) {
