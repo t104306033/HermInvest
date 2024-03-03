@@ -129,10 +129,37 @@ func (repo *transactionRepository) CreateTransactionHistory(t *model.Transaction
 	return repo.createTransactionHistoryWithTx(t, nil)
 }
 
+// testcase begin, commit, rollback
+// CreateTransactionHistorys: insert transactions and return inserted ids
+func (repo *transactionRepository) CreateTransactionHistorys(ts []*model.Transaction) ([]int, error) {
+	tx, err := repo.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var insertedIDs []int
+	for _, t := range ts {
+		id, err := repo.createTransactionHistoryWithTx(t, tx)
+		if err != nil {
+			fmt.Println("Error create transaction with Tx: ", err)
+			return nil, err
+		}
+		insertedIDs = append(insertedIDs, int(id))
+	}
+
+	// Commit the transaction.
+	if err = tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return insertedIDs, nil
+}
+
 // ---
 
 // FindFirstPurchase
-func (repo *transactionRepository) FindFirstPurchase(stockNo string) (*model.Transaction, error) {
+func (repo *transactionRepository) FindEarliestTransactionByStockNo(stockNo string) (*model.Transaction, error) {
 	query := "" +
 		"SELECT id, stockNo, date, tranType, quantity, unitPrice, totalAmount, taxes " +
 		"FROM tblTransaction WHERE stockNo = ? " +
@@ -145,7 +172,43 @@ func (repo *transactionRepository) FindFirstPurchase(stockNo string) (*model.Tra
 		return &model.Transaction{}, err
 	}
 
+	// fmt.Println(t.ID, t.StockNo, t.Date, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
+
 	return &t, nil
+}
+
+// QueryInventoryTransactions
+func (repo *transactionRepository) QueryInventoryTransactions(stockNo string, quantity int) ([]*model.Transaction, error) {
+	query := "" +
+		"WITH cte AS (" +
+		"	SELECT *, SUM(quantity) OVER (ORDER BY date, id) AS running_total" +
+		"	FROM tblTransaction" +
+		"	WHERE stockNo = ?" +
+		") " +
+		"SELECT id, stockNo, date, tranType, quantity, unitPrice, totalAmount, taxes " +
+		"FROM cte WHERE running_total <= ?"
+
+	rows, err := repo.db.Query(query, stockNo, quantity)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var transactions []*model.Transaction
+	for rows.Next() {
+		var t model.Transaction
+		err := rows.Scan(&t.ID, &t.StockNo, &t.Date, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+		if err != nil {
+			return nil, err
+		}
+		transactions = append(transactions, &t)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
 }
 
 // queryTransactionAll
@@ -247,4 +310,43 @@ func (repo *transactionRepository) UpdateTransaction(id int, t *model.Transactio
 func (repo *transactionRepository) DeleteTransaction(id int) error {
 	_, err := repo.db.Exec("DELETE FROM tblTransaction WHERE id = ?", id)
 	return err
+}
+
+// deleteTransactions
+func (repo *transactionRepository) DeleteTransactions(ids []int) error {
+	var args []interface{}
+	placeholders := make([]string, len(ids))
+	for i := range ids {
+		placeholders[i] = "?"
+		args = append(args, ids[i])
+	}
+
+	query := fmt.Sprintf("DELETE FROM tblTransaction WHERE id IN (%s)", strings.Join(placeholders, ", "))
+
+	_, err := repo.db.Exec(query, args...)
+	return err
+
+}
+
+// MoveInventoryToTransactionHistorys
+func (repo *transactionRepository) MoveInventoryToTransactionHistorys(ts []*model.Transaction) error {
+	// TODO: operate SQL with TX
+	var ids []int
+	for _, t := range ts {
+		ids = append(ids, t.ID)
+	}
+
+	// Delete transactions from transaction
+	err := repo.DeleteTransactions(ids)
+	if err != nil {
+		return fmt.Errorf("error deleting transactions: %v", err)
+	}
+
+	// Create transactions to from transactionHistory
+	_, err = repo.CreateTransactionHistorys(ts)
+	if err != nil {
+		return fmt.Errorf("error creating transaction history: %v", err)
+	}
+
+	return nil
 }
