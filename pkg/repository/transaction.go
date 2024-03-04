@@ -355,6 +355,8 @@ func (repo *transactionRepository) MoveInventoryToTransactionHistorys(ts []*mode
 // It will add or update transactions in the inventory and add history.
 // Return the modified transaction record in the inventory
 func (repo *transactionRepository) AddTransaction(newTransaction *model.Transaction) ([]*model.Transaction, error) {
+	// TODO: This func should be moved to service tier.
+
 	// Find the first purchase from the inventory
 	remainingQuantity := newTransaction.Quantity
 	earliestTransaction, err := repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
