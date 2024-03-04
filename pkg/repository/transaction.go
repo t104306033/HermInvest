@@ -350,3 +350,106 @@ func (repo *transactionRepository) MoveInventoryToTransactionHistorys(ts []*mode
 
 	return nil
 }
+
+// AddTransaction add the transaction from the input to the inventory.
+// It will add or update transactions in the inventory and add history.
+// Return the modified transaction record in the inventory
+func (repo *transactionRepository) AddTransaction(newTransaction *model.Transaction) ([]*model.Transaction, error) {
+	// Find the first purchase from the inventory
+	remainingQuantity := newTransaction.Quantity
+	earliestTransaction, err := repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
+	if err == sql.ErrNoRows {
+		// If no first purchase found, set TranType and handle accordingly
+		earliestTransaction.TranType = newTransaction.TranType
+	} else if err != nil {
+		return nil, fmt.Errorf("error finding first purchase: %v", err)
+	}
+
+	if earliestTransaction.TranType == newTransaction.TranType {
+		// add stock in the inventory directly
+		id, err := repo.CreateTransaction(newTransaction)
+		if err != nil {
+			return nil, fmt.Errorf("error creating transaction: %v", err)
+		}
+		transactions, err := repo.QueryTransactionByID(id)
+		if err != nil {
+			return nil, fmt.Errorf("error querying database: %v", err)
+		}
+
+		return transactions, nil
+	}
+
+	inventoryTransactions, err := repo.QueryInventoryTransactions(newTransaction.StockNo, newTransaction.Quantity)
+	if err != nil {
+		return nil, fmt.Errorf("error querying old purchase: %v", err)
+	}
+
+	for _, t := range inventoryTransactions {
+		remainingQuantity -= t.Quantity
+	}
+
+	err = repo.MoveInventoryToTransactionHistorys(inventoryTransactions)
+	if err != nil {
+		return nil, fmt.Errorf("error moving inventory to transaction history: %v", err)
+	}
+
+	if remainingQuantity > 0 {
+		// Find the first purchase again after old purchases are processed
+		earliestTransaction, err := repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				fmt.Println("add stock in the inventory directly", err)
+
+				// record newTransaction to history
+				newTransaction.SetQuantity(newTransaction.Quantity - remainingQuantity)
+				_, err = repo.CreateTransactionHistory(newTransaction)
+				if err != nil {
+					// handle create transaction history failed
+				}
+
+				newTransaction.SetQuantity(remainingQuantity)
+				id, err := repo.CreateTransaction(newTransaction)
+				if err != nil {
+					return nil, fmt.Errorf("error creating transaction: %v", err)
+				}
+
+				transactions, err := repo.QueryTransactionByID(id)
+				if err != nil {
+					return nil, fmt.Errorf("error querying database: %v", err)
+				}
+
+				return transactions, nil
+
+			}
+
+			return nil, fmt.Errorf("error querying database: %v", err)
+		}
+
+		if earliestTransaction.Quantity < remainingQuantity {
+			fmt.Println("Not Impelment yet: earliestTransaction.Quantity < remainingQuantity: ", err)
+			return nil, fmt.Errorf("not Impelment yet: earliestTransaction.Quantity < remainingQuantity: %v", err)
+		}
+
+		// Update the quantity of the first purchase
+		earliestTransaction.SetQuantity(earliestTransaction.Quantity - remainingQuantity)
+		err = repo.UpdateTransaction(earliestTransaction.ID, earliestTransaction)
+		if err != nil {
+			// handle update transaction failed
+		}
+
+		// record purchase history
+		earliestTransaction.SetQuantity(remainingQuantity)
+		_, err = repo.CreateTransactionHistory(earliestTransaction)
+		if err != nil {
+			// handle create transaction history failed
+		}
+	}
+
+	// record newTransaction to history
+	_, err = repo.CreateTransactionHistory(newTransaction)
+	if err != nil {
+		// handle create transaction history failed
+	}
+
+	return nil, nil
+}
