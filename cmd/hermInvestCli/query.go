@@ -63,7 +63,9 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	if all {
 		transactions, transactionsErr = repo.QueryTransactionAll()
 	} else if id != 0 {
-		transactions, transactionsErr = repo.QueryTransactionByID(id)
+		var transaction *model.Transaction
+		transaction, transactionsErr = repo.QueryTransactionByID(id)
+		transactions = append(transactions, transaction)
 	} else {
 		transactions, transactionsErr = repo.QueryTransactionByDetails(stockNo, tranType, date)
 	}

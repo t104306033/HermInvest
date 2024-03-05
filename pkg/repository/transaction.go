@@ -238,19 +238,17 @@ func (repo *transactionRepository) QueryTransactionAll() ([]*model.Transaction, 
 }
 
 // queryTransactionByID
-func (repo *transactionRepository) QueryTransactionByID(id int) ([]*model.Transaction, error) {
+func (repo *transactionRepository) QueryTransactionByID(id int) (*model.Transaction, error) {
 	query := `SELECT id, stockNo, tranType, quantity, date, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = ?`
 	row := repo.db.QueryRow(query, id)
 
-	var transactions []*model.Transaction
-	var t model.Transaction
+	var t *model.Transaction
 	err := row.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.Date, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 	if err != nil {
 		return nil, err
 	}
-	transactions = append(transactions, &t)
 
-	return transactions, nil
+	return t, nil
 }
 
 // queryTransactionByDetails
