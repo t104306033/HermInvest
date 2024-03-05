@@ -242,13 +242,13 @@ func (repo *transactionRepository) QueryTransactionByID(id int) (*model.Transact
 	query := `SELECT id, stockNo, tranType, quantity, date, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = ?`
 	row := repo.db.QueryRow(query, id)
 
-	var t *model.Transaction
+	var t model.Transaction
 	err := row.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.Date, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 	if err != nil {
 		return nil, err
 	}
 
-	return t, nil
+	return &t, nil
 }
 
 // queryTransactionByDetails
