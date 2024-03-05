@@ -62,7 +62,9 @@ func addRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Println("Error adding transaction: ", err)
 	} else if t != nil {
-		displayResults(t)
+		var ts []*model.Transaction
+		ts = append(ts, t)
+		displayResults(ts)
 	}
 
 }
