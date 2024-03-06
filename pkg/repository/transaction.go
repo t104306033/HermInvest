@@ -349,10 +349,33 @@ func (repo *transactionRepository) MoveInventoryToTransactionHistorys(ts []*mode
 	return nil
 }
 
-// service tier
+// Service Tier
 
-// addTransactionTailRecursion is from the input to the inventory.
+// addTransactionTailRecursion add new transaction records with tail recursion,
+// When adding, inventory and transaction history, especially write-offs and
+// tails, need to be considered.
 func (repo *transactionRepository) addTransactionTailRecursion(newTransaction *model.Transaction, remainingQuantity int) (*model.Transaction, error) {
+	// Principles:
+	// 1. Ensure that each transaction has a corresponding transaction record.
+	// 2. Update inventory quantities based on transactions, including adding,
+	//    reducing, or deleting inventory.
+	// 3. Depending on the transaction situation, only transaction history can
+	//    be added and cannot be modified or deleted.
+	// 4. For insufficient write-off quantities, recursive processing is used
+	//    to ensure that the write-off is completed.
+
+	// Cases:
+	// 1. Newly added: If there is no transaction in the inventory (A) or
+	//    the new transaction is the same as the oldest transaction in the
+	//    inventory (B), add it directly to the inventory.
+	// 2. Write-off:
+	// 	* Sufficient inventory: If the inventory quantity is sufficient,
+	//    update the inventory quantity (C) or delete the inventory (D), and
+	//    add the corresponding transaction history.
+	// 	* Insufficient inventory: If the inventory quantity can't be Write-off.
+	//    Recurse until success (E). The termination condition is A B C D.
+	//  * Over inventory: Write-off over than inventory (F).
+
 	// TODO: This func should be moved to service tier.
 
 	earliestTransaction, err := repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
@@ -360,13 +383,13 @@ func (repo *transactionRepository) addTransactionTailRecursion(newTransaction *m
 		if err != sql.ErrNoRows {
 			return nil, fmt.Errorf("error finding first purchase: %v", err)
 		}
-		// case1: no stock in the inventory, go to case2
+		// Case A
 		earliestTransaction.TranType = newTransaction.TranType
 	}
 
 	if earliestTransaction.TranType == newTransaction.TranType {
 		if newTransaction.Quantity != remainingQuantity {
-			// case6: over than inventory from Tail Recursion
+			// Case F
 			newTransaction.SetQuantity(newTransaction.Quantity - remainingQuantity)
 			_, err = repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
@@ -375,7 +398,7 @@ func (repo *transactionRepository) addTransactionTailRecursion(newTransaction *m
 			newTransaction.SetQuantity(remainingQuantity)
 		}
 
-		// case2: add stock in the inventory directly
+		// Case B
 		id, err := repo.CreateTransaction(newTransaction)
 		if err != nil {
 			return nil, fmt.Errorf("error creating transaction: %v", err)
@@ -388,7 +411,7 @@ func (repo *transactionRepository) addTransactionTailRecursion(newTransaction *m
 		return transaction, nil
 	} else {
 		if earliestTransaction.Quantity > remainingQuantity {
-			// case3: add transaction history and update stock inventory
+			// Case C
 
 			// Create a copy for adding stock history
 			stockHistoryAdd := &model.Transaction{}
@@ -416,7 +439,7 @@ func (repo *transactionRepository) addTransactionTailRecursion(newTransaction *m
 
 			return earliestTransaction, nil
 		} else if earliestTransaction.Quantity == remainingQuantity {
-			// case4: add transaction history and delete stock inventory
+			// Case D
 
 			// add transaction history
 			_, err = repo.CreateTransactionHistory(earliestTransaction)
@@ -437,7 +460,8 @@ func (repo *transactionRepository) addTransactionTailRecursion(newTransaction *m
 
 			return nil, nil
 		} else { // earliestTransaction.Quantity < remainingQuantity
-			// case5: add transaction history and delete stock inventory and repeat case 5, finally go to other case
+			// Case E
+
 			// add transaction history
 			_, err = repo.CreateTransactionHistory(earliestTransaction)
 			if err != nil {
