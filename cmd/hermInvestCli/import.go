@@ -111,17 +111,24 @@ func importRun(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		t := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
-		transactions = append(transactions, t)
+		newTransaction := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+		t, err := repo.AddTransaction(newTransaction)
+		if err != nil {
+			fmt.Println("Error adding transaction: ", err)
+		} else if t != nil {
+			transactions = append(transactions, t)
+		}
 	}
 
-	// TODO: create Transactions, bulk insert? Finally, I choose begin a db transaction
-	ids, err := repo.CreateTransactions(transactions)
-	if err != nil {
-		fmt.Println("Error creating transaction: ", err)
-	}
+	displayResults(transactions)
 
-	fmt.Println("inserted ids:", ids)
+	// // TODO: create Transactions, bulk insert? Finally, I choose begin a db transaction
+	// ids, err := repo.CreateTransactions(transactions)
+	// if err != nil {
+	// 	fmt.Println("Error creating transaction: ", err)
+	// }
+
+	// fmt.Println("inserted ids:", ids)
 
 	// 	// Bool control show result or not
 	// 	transactions, err := repo.queryTransactionByID(id)
