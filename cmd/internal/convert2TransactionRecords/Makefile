@@ -1,6 +1,6 @@
 SHELL := /bin/bash # For Completion Now
 
-CAT = cat
+HEAD = head
 BASH = bash
 TAIL_CMD = tail -n +2 -q
 ECHO_CMD = echo "date,time,stockNo,stockName,tranType,unitPrice,quantity,status"
@@ -9,6 +9,7 @@ CONVERT_CMD = $(BASH) $(CONVERT_SCRIPT)
 
 OUTPUT_NAME = ./Output.csv
 SRC_DIR = ./commissionHistory/
+EXAMPLE_SRC_DIR = ./commissionHistoryExample/
 CONVERT_SCRIPT = convert2TransationRecords.sh
 
 
@@ -23,20 +24,31 @@ endif
 ifeq ($(detected_OS),Windows)
     BIN_EXT=.exe
     RM=del /f
+	CP=copy
 else
     BIN_EXT=
     RM=rm -f
+	CP=cp
 endif
+
+# check if SRC_DIR has csv, otherwise assign to EXAMPLE_DIR
+ifeq ("$(wildcard $(SRC_DIR)*.csv)", "")
+	SRC_DIR = $(EXAMPLE_SRC_DIR)
+endif
+
+.PHONY: all show clean
 
 all: show
 
-$(OUTPUT_NAME): $(SRC_DIR)* $(CONVERT_SCRIPT)
-	$(ECHO_CMD) > $(OUTPUT_NAME)
-	$(TAIL_CMD) $(SRC_DIR)Before_2020-12_excel.csv | $(AWK_CMD) >> $(OUTPUT_NAME)
-	$(TAIL_CMD) $(SRC_DIR)commission_history_* | $(CONVERT_CMD) >> $(OUTPUT_NAME)
+$(OUTPUT_NAME): $(SRC_DIR)*.csv $(CONVERT_SCRIPT)
+	@$(ECHO_CMD) > $(OUTPUT_NAME)
+	@$(TAIL_CMD) $(SRC_DIR)Before_2020-12_excel.csv | $(AWK_CMD) >> $(OUTPUT_NAME)
+	@$(TAIL_CMD) $(SRC_DIR)commission_history_* | $(CONVERT_CMD) >> $(OUTPUT_NAME)
 
-show: $(OUTPUT_NAME)
-	$(CAT) $(OUTPUT_NAME)
+show: clean $(OUTPUT_NAME)
+	@$(HEAD) $(OUTPUT_NAME)
+	@echo "" 
+	@echo "Now the SRC_DIR is '$(SRC_DIR)'" 
 
 clean:
-	$(RM) $(OUTPUT_NAME)
+	@$(RM) $(OUTPUT_NAME)
