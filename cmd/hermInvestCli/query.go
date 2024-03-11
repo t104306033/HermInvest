@@ -1,6 +1,8 @@
 package main
 
 import (
+	"HermInvest/pkg/model"
+	"HermInvest/pkg/repository"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -47,23 +49,23 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	tranType, _ := cmd.Flags().GetInt("type")
 	date, _ := cmd.Flags().GetString("date")
 
-	db, err := GetDBConnection()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &transactionRepository{db: db}
+	repo := repository.NewTransactionRepository(db)
 
-	var transactions []*Transaction
+	var transactions []*model.Transaction
 	var transactionsErr error
 	if all {
-		transactions, transactionsErr = repo.queryTransactionAll()
+		transactions, transactionsErr = repo.QueryTransactionAll()
 	} else if id != 0 {
-		transactions, transactionsErr = repo.queryTransactionByID(id)
+		transactions, transactionsErr = repo.QueryTransactionByID(id)
 	} else {
-		transactions, transactionsErr = repo.queryTransactionByDetails(stockNo, tranType, date)
+		transactions, transactionsErr = repo.QueryTransactionByDetails(stockNo, tranType, date)
 	}
 	if transactionsErr != nil {
 		fmt.Println("Error querying database:", transactionsErr)
@@ -74,9 +76,9 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func displayResults(transactions []*Transaction) {
+func displayResults(transactions []*model.Transaction) {
 	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
 	for _, t := range transactions {
-		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.id, t.stockNo, t.tranType, t.quantity, t.unitPrice, t.totalAmount, t.taxes)
+		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.ID, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
 	}
 }

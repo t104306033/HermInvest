@@ -1,6 +1,8 @@
 package main
 
 import (
+	"HermInvest/pkg/model"
+	"HermInvest/pkg/repository"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -31,7 +33,7 @@ var importCmd = &cobra.Command{
 		"    hermInvestCli stock import stock.csv --swapColumn 0,1,3,2",
 	Long: "" +
 		"Import stock from csv file.\n" +
-		"Please check your csv file has column stockNo type quantity unitPrice.",
+		"Please check your csv file has column stockNo type quantity unitPrice [date].",
 	Args: cobra.ExactArgs(1),
 	Run:  importRun,
 }
@@ -84,16 +86,16 @@ func importRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	db, err := GetDBConnection()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &transactionRepository{db: db}
+	repo := repository.NewTransactionRepository(db)
 
-	var transactions []*Transaction
+	var transactions []*model.Transaction
 	for _, row := range rows {
 		if indexes != "" {
 			row, err = swapColumn(row, indexes)
@@ -109,12 +111,12 @@ func importRun(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		t := newTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+		t := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
 		transactions = append(transactions, t)
 	}
 
 	// TODO: create Transactions, bulk insert? Finally, I choose begin a db transaction
-	ids, err := repo.createTransactions(transactions)
+	ids, err := repo.CreateTransactions(transactions)
 	if err != nil {
 		fmt.Println("Error creating transaction: ", err)
 	}

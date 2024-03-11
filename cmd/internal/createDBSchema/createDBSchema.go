@@ -40,8 +40,8 @@ func main() {
 			quantity INTEGER NOT NULL,
 			tranType INTEGER NOT NULL,
 			unitPrice REAL NOT NULL,
-			totalAmount INTEGER,
-			taxes INTEGER,
+			totalAmount INTEGER NOT NULL,
+			taxes INTEGER NOT NULL,
 			PRIMARY KEY("id" AUTOINCREMENT)
 		)
 	`)
@@ -50,6 +50,26 @@ func main() {
 		return
 	}
 	fmt.Println("Table tblTransaction created successfully")
+
+	// Create tblTransactionHistory table
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS tblTransactionHistory (
+			id INTEGER UNIQUE,
+			stockNo TEXT NOT NULL,
+			date TEXT,
+			quantity INTEGER NOT NULL,
+			tranType INTEGER NOT NULL,
+			unitPrice REAL NOT NULL,
+			totalAmount INTEGER NOT NULL,
+			taxes INTEGER NOT NULL,
+			PRIMARY KEY("id" AUTOINCREMENT)
+		)
+	`)
+	if err != nil {
+		fmt.Println("Error creating tblTransactionHistory table:", err)
+		return
+	}
+	fmt.Println("Table tblTransactionHistory created successfully")
 
 	fmt.Println("Database created successfully")
 }

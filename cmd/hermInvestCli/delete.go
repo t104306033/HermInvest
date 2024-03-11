@@ -1,6 +1,7 @@
 package main
 
 import (
+	"HermInvest/pkg/repository"
 	"bufio"
 	"fmt"
 	"os"
@@ -31,18 +32,18 @@ func deleteRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	db, err := GetDBConnection()
+	db, err := repository.GetDBConnection()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
 	defer db.Close()
 
 	// init transactionRepository
-	repo := &transactionRepository{db: db}
+	repo := repository.NewTransactionRepository(db)
 
 	confirm := confirmDeletion()
 	if confirm {
-		err = repo.deleteTransaction(id)
+		err = repo.DeleteTransaction(id)
 		if err != nil {
 			fmt.Println("Error deleting transaction:", err)
 			return

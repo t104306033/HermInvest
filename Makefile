@@ -39,7 +39,7 @@ endif
 
 all: exec
 
-$(BIN_NAME)$(BIN_EXT): $(SRC_PATH).go
+$(BIN_NAME)$(BIN_EXT): $(SRC_PATH).go ./pkg/*/*.go
 	$(MAKE) build
 
 build:
