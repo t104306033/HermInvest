@@ -49,13 +49,12 @@ func updateRun(cmd *cobra.Command, args []string) {
 	// init transactionRepository
 	repo := repository.NewTransactionRepository(db)
 
-	transactions, err := repo.QueryTransactionByID(transactionID)
+	t, err := repo.QueryTransactionByID(transactionID)
 	if err != nil {
 		fmt.Println("Error querying database:", err)
 	}
 
 	// TODO: check update work. ex: update a fake transaction ID to db
-	t := transactions[0]
 	t.SetUnitPrice(unitPrice) // update unit Price
 
 	// update db
