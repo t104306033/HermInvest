@@ -10,7 +10,7 @@ CONVERT_CMD = $(BASH) $(CONVERT_SCRIPT)
 OUTPUT_NAME = ./Output.csv
 SRC_DIR = ./commissionHistory/
 EXAMPLE_SRC_DIR = ./commissionHistoryExample/
-CONVERT_SCRIPT = convert2TransationRecords.sh
+CONVERT_SCRIPT = convertCommissionHistory.sh
 
 
 # Detect the OS
