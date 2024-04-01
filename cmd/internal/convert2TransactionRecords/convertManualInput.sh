@@ -6,8 +6,8 @@ cat - | awk -F',' '{
     tranType = $3; unitPrice = $6; quantity = $4
 
     # time
-    # The transaction time cannot overlap. If it is the same day,
-    # the time will be increased by 10 seconds than the previous time.
+    # The transaction time overlap is impossible. If it is the same day,
+    # the time will increase by 10 seconds from the previous time.
     if (prev_date == date) {
         prev_time = time
         cmd = "date +\"%H:%M:%S\" -d\""prev_time " 10 seconds\""
