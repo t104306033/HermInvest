@@ -17,6 +17,26 @@ func main() {
 	defer db.Close()
 	fmt.Println("Database is creating ...")
 
+	// Create tblTransactionRecord table
+	_, err = db.Exec(`
+		CREATE TABLE "tblTransactionRecord" (
+			"date"	TEXT NOT NULL,
+			"time"	TEXT NOT NULL,
+			"stockNo"	TEXT NOT NULL,
+			"stockName"	TEXT NOT NULL,
+			"tranType"	INTEGER NOT NULL,
+			"quantity"	INTEGER NOT NULL,
+			"unitPrice"	REAL NOT NULL,
+			"status"	TEXT NOT NULL,
+			PRIMARY KEY("date","time")
+		)
+	`)
+	if err != nil {
+		fmt.Println("Error creating tblTransactionRecord table:", err)
+		return
+	}
+	fmt.Println("Table tblTransactionRecord created successfully")
+
 	// Create tblStockMapping table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS tblStockMapping (
