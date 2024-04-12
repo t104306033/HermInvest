@@ -36,6 +36,6 @@ cat - | iconv -f BIG5 | awk -F',' '{
 
 	# print out result
 	printf "%s,%s,%s,%s,%s,%s,%s,%s\n",
-		date, time, stockNo, stockName, tranType, unitPrice, quantity, status
+		date, time, stockNo, stockName, tranType, quantity, unitPrice, status
 }
 ' | grep -v "委託成功" | sort -k1,1 -k2,2

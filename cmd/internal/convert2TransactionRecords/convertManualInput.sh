@@ -23,6 +23,6 @@ cat - | awk -F',' '{
 
 	# print out result
 	printf "%s,%s,%s,%s,%s,%s,%s,%s\n",
-		date, time, stockNo, stockName, tranType, unitPrice, quantity, status
+		date, time, stockNo, stockName, tranType, quantity, unitPrice, status
 }
 ' | sort -k1,1 -k2,2

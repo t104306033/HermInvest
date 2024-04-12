@@ -3,8 +3,7 @@ SHELL := /bin/bash # For Completion Now
 HEAD = head
 BASH = bash
 TAIL_CMD = tail -n +2 -q
-ECHO_CMD = echo "date,time,stockNo,stockName,tranType,unitPrice,quantity,status"
-AWK_CMD = awk -F',' '{printf "%s,--,%s,%s,%s,%s,%s,--\n",$$5,$$2,$$1,$$3,$$6,$$4}'
+ECHO_CMD = echo "date,time,stockNo,stockName,tranType,quantity,unitPrice,status"
 MANUAL_CONV = $(BASH) $(MI_SCRIPT)
 COMMISSION_CONV = $(BASH) $(CH_SCRIPT)
 
