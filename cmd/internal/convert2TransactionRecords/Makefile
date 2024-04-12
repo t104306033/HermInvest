@@ -7,7 +7,7 @@ ECHO_CMD = echo "date,time,stockNo,stockName,tranType,quantity,unitPrice,status"
 MANUAL_CONV = $(BASH) $(MI_SCRIPT)
 COMMISSION_CONV = $(BASH) $(CH_SCRIPT)
 
-OUTPUT_NAME = ./Output.csv
+OUTPUT_NAME = ./tblTransactionRecord.csv
 SRC_DIR = ./commissionHistory/
 EXAMPLE_SRC_DIR = ./commissionHistoryExample/
 MI_SCRIPT = convertManualInput.sh
