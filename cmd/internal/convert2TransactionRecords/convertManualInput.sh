@@ -18,11 +18,11 @@ cat - | awk -F',' '{
     }
     prev_date = date
 
-    # Manual input status is always 1
-    status = 1
+    # Manual input source is 1, check Readmd.md
+    source = 1
 
 	# print out result
 	printf "%s,%s,%s,%s,%s,%s,%s,%s\n",
-		date, time, stockNo, stockName, tranType, quantity, unitPrice, status
+		date, time, stockNo, stockName, tranType, quantity, unitPrice, source
 }
 ' | sort -k1,1 -k2,2

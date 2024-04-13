@@ -24,18 +24,20 @@ cat - | iconv -f BIG5 | awk -F',' '{
 		tranType = 0
 	}
 
-	# unitPrice, quantity and status
+	# unitPrice, quantity
 	unitPrice = $6
 	quantity = $8
+
+	# Commission history source is 2, check Readmd.md
 	if ($12 ~ "完全成交") {
-		status = 1
+		source = 2
 	} else {
-		status = $12
+		source = $12
 	}
 
 
 	# print out result
 	printf "%s,%s,%s,%s,%s,%s,%s,%s\n",
-		date, time, stockNo, stockName, tranType, quantity, unitPrice, status
+		date, time, stockNo, stockName, tranType, quantity, unitPrice, source
 }
 ' | grep -v "委託成功" | sort -k1,1 -k2,2

@@ -3,7 +3,7 @@ SHELL := /bin/bash # For Completion Now
 HEAD = head
 BASH = bash
 TAIL_CMD = tail -n +2 -q
-ECHO_CMD = echo "date,time,stockNo,stockName,tranType,quantity,unitPrice,status"
+ECHO_CMD = echo "date,time,stockNo,stockName,tranType,quantity,unitPrice,source"
 MANUAL_CONV = $(BASH) $(MI_SCRIPT)
 COMMISSION_CONV = $(BASH) $(CH_SCRIPT)
 
