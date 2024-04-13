@@ -27,7 +27,7 @@ func main() {
 			"tranType"	INTEGER NOT NULL,
 			"quantity"	INTEGER NOT NULL,
 			"unitPrice"	REAL NOT NULL,
-			"status"	TEXT NOT NULL,
+			"source"	INTEGER NOT NULL,
 			PRIMARY KEY("date","time")
 		)
 	`)
