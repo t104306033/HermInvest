@@ -105,13 +105,13 @@ func importRun(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(row)
+		tranDate, tranTime, stockNo, tranType, quantity, unitPrice, err := ParseTransactionForAddCmd(row)
 		if err != nil {
 			fmt.Println("Error parsing transaction data:", err)
 			return
 		}
 
-		newTransaction := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+		newTransaction := model.NewTransactionFromInput(tranDate, tranTime, stockNo, tranType, quantity, unitPrice)
 		t, err := repo.AddTransaction(newTransaction)
 		if err != nil {
 			fmt.Println("Error adding transaction: ", err)

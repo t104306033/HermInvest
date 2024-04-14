@@ -17,16 +17,16 @@ import (
 // 5. print out result
 
 var addCmd = &cobra.Command{
-	Use:   "add stockNo type quantity unitPrice [date]",
-	Short: "Add stock (Stock No., Type, Quantity, Unit Price)",
+	Use:   "add date time stockNo type quantity unitPrice",
+	Short: "Add date time stock (Stock No., Type, Quantity, Unit Price)",
 	Example: "" +
-		"  - Purchase at today's date:\n" +
-		"    hermInvestCli stock add 0050 1 1500 23.5\n\n" +
+		"  - Purchase on a specific date:\n" +
+		"    hermInvestCli stock add 2023-12-01 09:00:00 0050 1 1500 23.5\n\n" +
 
 		"  - Sale on a specific date:\n" +
-		"    hermInvestCli stock add -- 0050 -1 1500 23.5 2023-12-01",
+		"    hermInvestCli stock add -- 2023-12-01 09:00:10 0050 -1 1500 23.5",
 	Long: `Add stock by transaction stock number, type, quantity, and unit price`,
-	Args: cobra.RangeArgs(4, 5),
+	Args: cobra.RangeArgs(6, 6),
 	Run:  addRun,
 }
 
@@ -35,7 +35,7 @@ func init() {
 }
 
 func addRun(cmd *cobra.Command, args []string) {
-	stockNo, tranType, quantity, unitPrice, date, err := ParseTransactionForAddCmd(args)
+	tranDate, tranTime, stockNo, tranType, quantity, unitPrice, err := ParseTransactionForAddCmd(args)
 	if err != nil {
 		fmt.Println("Error parsing transaction data:", err)
 		return
@@ -56,7 +56,7 @@ func addRun(cmd *cobra.Command, args []string) {
 	// 3. check the transaction type of new transaction and first purchase
 
 	// TODO: service.addTransaction() AddTransactionAndUpdateInventory
-	newTransaction := model.NewTransactionFromInput(stockNo, date, quantity, tranType, unitPrice)
+	newTransaction := model.NewTransactionFromInput(tranDate, tranTime, stockNo, tranType, quantity, unitPrice)
 
 	t, err := repo.AddTransaction(newTransaction)
 	if err != nil {
@@ -69,34 +69,38 @@ func addRun(cmd *cobra.Command, args []string) {
 
 }
 
-func ParseTransactionForAddCmd(args []string) (string, int, int, float64, string, error) {
-	stockNo := args[0] // regex a-z 0-9
+func ParseTransactionForAddCmd(args []string) (string, string, string, int, int, float64, error) {
 
-	tranType, err := strconv.Atoi(args[1])
+	var parsedTime time.Time
+	var err error
+	parsedTime, err = time.Parse(time.DateOnly, args[0])
 	if err != nil {
-		return "", 0, 0, 0, "", fmt.Errorf("error parsing integer: %s", err)
+		return "", "", "", 0, 0, 0, fmt.Errorf("error parsing date: %s", err)
 	}
+	tranDate := parsedTime.Format(time.DateOnly)
 
-	quantity, err := strconv.Atoi(args[2])
+	parsedTime, err = time.Parse(time.TimeOnly, args[1])
 	if err != nil {
-		return "", 0, 0, 0, "", fmt.Errorf("error parsing integer: %s", err)
+		return "", "", "", 0, 0, 0, fmt.Errorf("error parsing time: %s", err)
 	}
+	tranTate := parsedTime.Format(time.TimeOnly)
 
-	unitPrice, err := strconv.ParseFloat(args[3], 64)
+	stockNo := args[2] // regex a-z A-Z 0-9
+
+	tranType, err := strconv.Atoi(args[3])
 	if err != nil {
-		return "", 0, 0, 0, "", fmt.Errorf("error parsing float: %s", err)
+		return "", "", "", 0, 0, 0, fmt.Errorf("error parsing integer: %s", err)
 	}
 
-	var date string
-	if len(args) > 4 {
-		parsedTime, err := time.Parse(time.DateOnly, args[4])
-		if err != nil {
-			return "", 0, 0, 0, "", fmt.Errorf("error parsing date: %s", err)
-		}
-		date = parsedTime.Format(time.DateOnly)
-	} else {
-		date = time.Now().Format(time.DateOnly)
+	quantity, err := strconv.Atoi(args[4])
+	if err != nil {
+		return "", "", "", 0, 0, 0, fmt.Errorf("error parsing integer: %s", err)
 	}
 
-	return stockNo, tranType, quantity, unitPrice, date, nil
+	unitPrice, err := strconv.ParseFloat(args[5], 64)
+	if err != nil {
+		return "", "", "", 0, 0, 0, fmt.Errorf("error parsing float: %s", err)
+	}
+
+	return tranDate, tranTate, stockNo, tranType, quantity, unitPrice, nil
 }
