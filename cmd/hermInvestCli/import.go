@@ -33,7 +33,7 @@ var importCmd = &cobra.Command{
 		"    hermInvestCli stock import stock.csv --swapColumn 0,1,3,2",
 	Long: "" +
 		"Import stock from csv file.\n" +
-		"Please check your csv file has column stockNo type quantity unitPrice [date].",
+		"Please check your csv file has column date time stockNo type quantity unitPrice.",
 	Args: cobra.ExactArgs(1),
 	Run:  importRun,
 }

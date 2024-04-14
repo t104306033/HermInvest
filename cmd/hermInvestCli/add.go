@@ -25,7 +25,7 @@ var addCmd = &cobra.Command{
 
 		"  - Sale on a specific date:\n" +
 		"    hermInvestCli stock add -- 2023-12-01 09:00:10 0050 -1 1500 23.5",
-	Long: `Add stock by transaction stock number, type, quantity, and unit price`,
+	Long: `Add stock by transaction date time stockNo type quantity unitPrice`,
 	Args: cobra.RangeArgs(6, 6),
 	Run:  addRun,
 }
