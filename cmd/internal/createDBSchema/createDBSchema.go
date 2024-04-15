@@ -55,6 +55,23 @@ func main() {
 	}
 	fmt.Println("Table tblCapitalReduction created successfully")
 
+	// Create tblDividend table
+	_, err = db.Exec(`
+		CREATE TABLE tblDividend (
+			YQ TEXT NOT NULL,
+			stockNo TEXT NOT NULL,
+			ExDividendDate TEXT NOT NULL,
+			distributionDate TEXT NOT NULL,
+			cashDividend REAL,
+			stockDividend REAL
+		)
+	`)
+	if err != nil {
+		fmt.Println("Error creating tblDividend table:", err)
+		return
+	}
+	fmt.Println("Table tblDividend created successfully")
+
 	// Create tblStockMapping table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS tblStockMapping (
