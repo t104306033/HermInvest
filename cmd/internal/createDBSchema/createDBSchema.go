@@ -37,6 +37,24 @@ func main() {
 	}
 	fmt.Println("Table tblTransactionRecord created successfully")
 
+	// Create tblTransactionRecordSys table
+	_, err = db.Exec(`
+		CREATE TABLE "tblTransactionRecordSys" (
+			"date"	TEXT NOT NULL,
+			"time"	TEXT NOT NULL,
+			"stockNo"	TEXT NOT NULL,
+			"tranType"	INTEGER NOT NULL,
+			"quantity"	INTEGER NOT NULL,
+			"unitPrice"	REAL NOT NULL,
+			PRIMARY KEY("date","time")
+		)
+	`)
+	if err != nil {
+		fmt.Println("Error creating tblTransactionRecordSys table:", err)
+		return
+	}
+	fmt.Println("Table tblTransactionRecordSys created successfully")
+
 	// Create tblCapitalReduction table
 	_, err = db.Exec(`
 		CREATE TABLE tblCapitalReduction (
