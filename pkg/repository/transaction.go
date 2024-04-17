@@ -349,6 +349,40 @@ func (repo *transactionRepository) MoveInventoryToTransactionHistorys(ts []*mode
 	return nil
 }
 
+func (repo *transactionRepository) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
+	query := `SELECT YQ, stockNo, capitalReductionDate, distributionDate, cash, ratio, newStockNo FROM tblCapitalReduction`
+	rows, err := repo.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var capitalReductions []*model.CapitalReduction
+	for rows.Next() {
+		var t model.CapitalReduction
+		var newStockNo sql.NullString
+		err := rows.Scan(&t.YQ, &t.StockNo, &t.CapitalReductionDate, &t.DistributionDate, &t.Cash, &t.Ratio, &newStockNo)
+		if err != nil {
+			return nil, err
+		}
+
+		if newStockNo.Valid {
+			t.NewStockNo = newStockNo.String
+		} else {
+			t.NewStockNo = "" // 或者任何你想要的預設值
+		}
+
+		capitalReductions = append(capitalReductions, &t)
+		fmt.Println(t.YQ, t.StockNo, t.CapitalReductionDate, t.DistributionDate, t.Cash, t.Ratio, t.NewStockNo)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return capitalReductions, nil
+}
+
 // Service Tier
 
 // addTransactionTailRecursion add new transaction records with tail recursion,
