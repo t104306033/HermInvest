@@ -383,6 +383,34 @@ func (repo *transactionRepository) QueryCapitalReductionAll() ([]*model.CapitalR
 	return capitalReductions, nil
 }
 
+// queryTransactionAll
+func (repo *transactionRepository) QueryTransactionRecordByStockNo(stockNo string) ([]*model.TransactionRecord, error) {
+
+	query := `SELECT date, time, stockNo, tranType, quantity, unitPrice FROM tblTransactionRecord WHERE stockNo = ?`
+	rows, err := repo.db.Query(query, stockNo)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var transactionRecords []*model.TransactionRecord
+	for rows.Next() {
+		var tr model.TransactionRecord
+		err := rows.Scan(&tr.Date, &tr.Time, &tr.StockNo, &tr.TranType, &tr.Quantity, &tr.UnitPrice)
+		if err != nil {
+			return nil, err
+		}
+		transactionRecords = append(transactionRecords, &tr)
+		fmt.Println(tr.Date, tr.Time, tr.StockNo, tr.TranType, tr.Quantity, tr.UnitPrice)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return transactionRecords, nil
+}
+
 // Service Tier
 
 // addTransactionTailRecursion add new transaction records with tail recursion,

@@ -27,8 +27,10 @@ func capitalReductionTransactionGenerator() {
 	repo := repository.NewTransactionRepository(db)
 
 	// 1. select * from tblCapitalReduction
-	repo.QueryCapitalReductionAll()
+	crs, err := repo.QueryCapitalReductionAll()
+
 	// 2. select stockNo quantity tblTransactionRecord group by and where stockNo
+	repo.QueryTransactionRecordByStockNo(crs[1].StockNo)
 	// 3. insert into tblTransactionRecordSys
 }
 
