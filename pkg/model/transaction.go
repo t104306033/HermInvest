@@ -2,12 +2,12 @@ package model
 
 // Transaction represents a record of a share transaction.
 type TransactionRecord struct {
-	Date      string
-	Time      string
-	StockNo   string
-	TranType  int
-	Quantity  int
-	UnitPrice float64
+	Date      string  `gorm:"column:date"`
+	Time      string  `gorm:"column:time"`
+	StockNo   string  `gorm:"column:stockNo"`
+	TranType  int     `gorm:"column:tranType"`
+	Quantity  int     `gorm:"column:quantity"`
+	UnitPrice float64 `gorm:"column:unitPrice"`
 }
 
 // NewTransactionRecord creates a new transaction record object.
