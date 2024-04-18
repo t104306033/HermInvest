@@ -1,5 +1,27 @@
 package model
 
+// Transaction represents a record of a share transaction.
+type TransactionRecord struct {
+	Date      string
+	Time      string
+	StockNo   string
+	TranType  int
+	Quantity  int
+	UnitPrice float64
+}
+
+// NewTransactionRecord creates a new transaction record object.
+func NewTransactionRecord(date, time, stockNo string, tranType, quantity int, unitPrice float64) TransactionRecord {
+	return TransactionRecord{
+		Date:      date,
+		Time:      time,
+		StockNo:   stockNo,
+		TranType:  tranType,
+		Quantity:  quantity,
+		UnitPrice: unitPrice,
+	}
+}
+
 // Transaction represents a share transaction.
 type Transaction struct {
 	ID          int
