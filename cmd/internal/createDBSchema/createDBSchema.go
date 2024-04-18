@@ -19,7 +19,7 @@ func main() {
 
 	// Create tblTransactionRecord table
 	_, err = db.Exec(`
-		CREATE TABLE "tblTransactionRecord" (
+		CREATE TABLE IF NOT EXISTS "tblTransactionRecord" (
 			"date"	TEXT NOT NULL,
 			"time"	TEXT NOT NULL,
 			"stockNo"	TEXT NOT NULL,
@@ -39,7 +39,7 @@ func main() {
 
 	// Create tblTransactionRecordSys table
 	_, err = db.Exec(`
-		CREATE TABLE "tblTransactionRecordSys" (
+		CREATE TABLE IF NOT EXISTS "tblTransactionRecordSys" (
 			"date"	TEXT NOT NULL,
 			"time"	TEXT NOT NULL,
 			"stockNo"	TEXT NOT NULL,
@@ -57,7 +57,7 @@ func main() {
 
 	// Create tblCapitalReduction table
 	_, err = db.Exec(`
-		CREATE TABLE tblCapitalReduction (
+		CREATE TABLE IF NOT EXISTS  tblCapitalReduction (
 			YQ TEXT NOT NULL,
 			stockNo TEXT NOT NULL,
 			capitalReductionDate TEXT NOT NULL,
@@ -75,7 +75,7 @@ func main() {
 
 	// Create tblDividend table
 	_, err = db.Exec(`
-		CREATE TABLE tblDividend (
+		CREATE TABLE IF NOT EXISTS tblDividend (
 			YQ TEXT NOT NULL,
 			stockNo TEXT NOT NULL,
 			ExDividendDate TEXT NOT NULL,
