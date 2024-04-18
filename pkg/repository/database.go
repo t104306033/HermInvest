@@ -3,6 +3,9 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func GetDBConnection() (*sql.DB, error) {
@@ -14,6 +17,20 @@ func GetDBConnection() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening database: %v", err)
+	}
+
+	return db, nil
+}
+
+func GetDBConnectionGorm() (*gorm.DB, error) {
+	// TODO: extract DB connection to configuration
+	// sqlite3 connection with foreign keys enabled
+	// TODO: need to check db file, if not exist, exit. otherwise ... db will be created
+	var dbPath = "./internal/app/database/dev-database.db"
+
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	if err != nil {
+		return nil, err
 	}
 
 	return db, nil

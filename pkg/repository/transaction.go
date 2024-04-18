@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type transactionRepository struct {
@@ -15,6 +17,14 @@ func NewTransactionRepository(db *sql.DB) *transactionRepository {
 	return &transactionRepository{
 		db: db,
 	}
+}
+
+type TransactionRepositoryGorm struct {
+	db *gorm.DB
+}
+
+func NewTransactionRepositoryGorm(db *gorm.DB) *TransactionRepositoryGorm {
+	return &TransactionRepositoryGorm{db: db}
 }
 
 func (repo *transactionRepository) prepareStmt(sqlStmt string, tx *sql.Tx) (*sql.Stmt, error) {
@@ -349,65 +359,25 @@ func (repo *transactionRepository) MoveInventoryToTransactionHistorys(ts []*mode
 	return nil
 }
 
-func (repo *transactionRepository) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
-	query := `SELECT YQ, stockNo, capitalReductionDate, distributionDate, cash, ratio, newStockNo FROM tblCapitalReduction`
-	rows, err := repo.db.Query(query)
-	if err != nil {
+func (repo *TransactionRepositoryGorm) QueryCapitalReductionAll() ([]model.CapitalReduction, error) {
+	var capitalReductions []model.CapitalReduction
+	// 使用 Gorm 框架的 Find 方法來執行查詢
+	if err := repo.db.Debug().Table("tblCapitalReduction").Find(&capitalReductions).Error; err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var capitalReductions []*model.CapitalReduction
-	for rows.Next() {
-		var t model.CapitalReduction
-		var newStockNo sql.NullString
-		err := rows.Scan(&t.YQ, &t.StockNo, &t.CapitalReductionDate, &t.DistributionDate, &t.Cash, &t.Ratio, &newStockNo)
-		if err != nil {
-			return nil, err
-		}
-
-		if newStockNo.Valid {
-			t.NewStockNo = newStockNo.String
-		} else {
-			t.NewStockNo = "" // 或者任何你想要的預設值
-		}
-
-		capitalReductions = append(capitalReductions, &t)
-		fmt.Println(t.YQ, t.StockNo, t.CapitalReductionDate, t.DistributionDate, t.Cash, t.Ratio, t.NewStockNo)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
+	fmt.Println(capitalReductions)
+	fmt.Println(capitalReductions[0])
 	return capitalReductions, nil
 }
 
 // queryTransactionAll
-func (repo *transactionRepository) QueryTransactionRecordByStockNo(stockNo string) ([]*model.TransactionRecord, error) {
-
-	query := `SELECT date, time, stockNo, tranType, quantity, unitPrice FROM tblTransactionRecord WHERE stockNo = ?`
-	rows, err := repo.db.Query(query, stockNo)
+func (repo *TransactionRepositoryGorm) QueryTransactionRecordByStockNo(stockNo string) ([]model.TransactionRecord, error) {
+	var transactionRecords []model.TransactionRecord
+	err := repo.db.Debug().Table("tblTransactionRecord").Where("stockNo = ?", stockNo).Find(&transactionRecords).Error
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var transactionRecords []*model.TransactionRecord
-	for rows.Next() {
-		var tr model.TransactionRecord
-		err := rows.Scan(&tr.Date, &tr.Time, &tr.StockNo, &tr.TranType, &tr.Quantity, &tr.UnitPrice)
-		if err != nil {
-			return nil, err
-		}
-		transactionRecords = append(transactionRecords, &tr)
-		fmt.Println(tr.Date, tr.Time, tr.StockNo, tr.TranType, tr.Quantity, tr.UnitPrice)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
+	fmt.Println(transactionRecords)
 	return transactionRecords, nil
 }
 

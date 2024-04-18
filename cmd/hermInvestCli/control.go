@@ -17,20 +17,19 @@ func init() {
 }
 
 func capitalReductionTransactionGenerator() {
-	db, err := repository.GetDBConnection()
+	db, err := repository.GetDBConnectionGorm()
 	if err != nil {
 		fmt.Println("Error geting DB connection: ", err)
 	}
-	defer db.Close()
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepository(db)
+	repo := repository.NewTransactionRepositoryGorm(db)
 
 	// 1. select * from tblCapitalReduction
-	crs, err := repo.QueryCapitalReductionAll()
+	repo.QueryCapitalReductionAll()
 
 	// 2. select stockNo quantity tblTransactionRecord group by and where stockNo
-	repo.QueryTransactionRecordByStockNo(crs[1].StockNo)
+	repo.QueryTransactionRecordByStockNo("2409")
 	// 3. insert into tblTransactionRecordSys
 }
 
