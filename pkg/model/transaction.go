@@ -11,8 +11,8 @@ type TransactionRecord struct {
 }
 
 // NewTransactionRecord creates a new transaction record object.
-func NewTransactionRecord(date, time, stockNo string, tranType, quantity int, unitPrice float64) TransactionRecord {
-	return TransactionRecord{
+func NewTransactionRecord(date, time, stockNo string, tranType, quantity int, unitPrice float64) *TransactionRecord {
+	return &TransactionRecord{
 		Date:      date,
 		Time:      time,
 		StockNo:   stockNo,

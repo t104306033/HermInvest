@@ -359,26 +359,43 @@ func (repo *transactionRepository) MoveInventoryToTransactionHistorys(ts []*mode
 	return nil
 }
 
-func (repo *TransactionRepositoryGorm) QueryCapitalReductionAll() ([]model.CapitalReduction, error) {
-	var capitalReductions []model.CapitalReduction
+// QueryCapitalReductionAll
+func (repo *TransactionRepositoryGorm) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
+	var capitalReductions []*model.CapitalReduction
 	// 使用 Gorm 框架的 Find 方法來執行查詢
 	if err := repo.db.Debug().Table("tblCapitalReduction").Find(&capitalReductions).Error; err != nil {
 		return nil, err
 	}
-	fmt.Println(capitalReductions)
-	fmt.Println(capitalReductions[0])
+
+	// for _, cr := range capitalReductions {
+	// 	fmt.Println(cr)
+	// }
+
 	return capitalReductions, nil
 }
 
-// queryTransactionAll
-func (repo *TransactionRepositoryGorm) QueryTransactionRecordByStockNo(stockNo string) ([]model.TransactionRecord, error) {
-	var transactionRecords []model.TransactionRecord
-	err := repo.db.Debug().Table("tblTransactionRecord").Where("stockNo = ?", stockNo).Find(&transactionRecords).Error
+// QueryTransactionRecordByStockNo
+func (repo *TransactionRepositoryGorm) QueryTransactionRecordByStockNo(stockNo string, date string) ([]*model.TransactionRecord, error) {
+	var transactionRecords []*model.TransactionRecord
+	err := repo.db.Debug().Table("tblTransactionRecord").Where("stockNo = ? and date < ?", stockNo, date).Find(&transactionRecords).Error
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(transactionRecords)
+
+	// for _, cr := range transactionRecords {
+	// 	fmt.Println(cr)
+	// }
+
 	return transactionRecords, nil
+}
+
+// deleteAllTransactionRecordSys
+func (repo *TransactionRepositoryGorm) DeleteAllTransactionRecordSys() error {
+	if err := repo.db.Debug().Exec("DELETE FROM tblTransactionRecordSys").Error; err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Service Tier
