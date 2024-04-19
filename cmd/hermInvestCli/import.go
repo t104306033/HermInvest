@@ -30,7 +30,11 @@ var importCmd = &cobra.Command{
 		"    hermInvestCli stock import stock.csv\n\n" +
 
 		"  - Import stock from file and swap new order column as 0,1,3,2,4:\n" +
-		"    hermInvestCli stock import stock.csv --swapColumn 0,1,3,2",
+		"    hermInvestCli stock import stock.csv --swapColumn 0,1,3,2" +
+
+		"  - Import stock from file and swap new order column as 0,1,2,4,5,6:\n" +
+		"    hermInvestCli stock import stock.csv --swapColumn 0,1,2,4,5,6",
+
 	Long: "" +
 		"Import stock from csv file.\n" +
 		"Please check your csv file has column date time stockNo type quantity unitPrice.",
