@@ -45,8 +45,7 @@ func main() {
 			"stockNo"	TEXT NOT NULL,
 			"tranType"	INTEGER NOT NULL,
 			"quantity"	INTEGER NOT NULL,
-			"unitPrice"	REAL NOT NULL,
-			PRIMARY KEY("date","time")
+			"unitPrice"	REAL NOT NULL
 		)
 	`)
 	if err != nil {

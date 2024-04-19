@@ -398,6 +398,15 @@ func (repo *TransactionRepositoryGorm) DeleteAllTransactionRecordSys() error {
 	return nil
 }
 
+// insertTransactionRecordSys
+func (repo *TransactionRepositoryGorm) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
+	if err := repo.db.Debug().Table("tblTransactionRecordSys").Create(tr).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Service Tier
 
 // addTransactionTailRecursion add new transaction records with tail recursion,
