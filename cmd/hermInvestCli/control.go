@@ -82,6 +82,25 @@ func capitalReductionTransactionGenerator() {
 
 }
 
-func controlRun(cmd *cobra.Command, args []string) {
+func transactionReGenerator() {
+	db, err := repository.GetDBConnectionGorm()
+	if err != nil {
+		fmt.Println("Error geting DB connection: ", err)
+	}
+
+	// init transactionRepository
+	repo := repository.NewTransactionRepositoryGorm(db)
+
 	capitalReductionTransactionGenerator()
+
+	repo.QueryTransactionRecordUnion()
+	// trs, _ := repo.QueryTransactionRecordUnion()
+
+	// for _, tr := range trs {
+	// 	fmt.Println(tr)
+	// }
+}
+
+func controlRun(cmd *cobra.Command, args []string) {
+	transactionReGenerator()
 }

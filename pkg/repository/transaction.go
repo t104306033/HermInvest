@@ -398,6 +398,24 @@ func (repo *TransactionRepositoryGorm) DeleteAllTransactionRecordSys() error {
 	return nil
 }
 
+// QueryTransactionRecordUnion
+func (repo *TransactionRepositoryGorm) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
+	// SQLite seems to help you sort items by primary key when you query via UNION keyword.
+	// Or you can add ORDER keyword in the last line to sort it.
+	var transactionRecords []*model.TransactionRecord
+	err := repo.db.Debug().Raw(`
+	SELECT date, time, stockNo, tranType, quantity, unitPrice
+	FROM tblTransactionRecord
+	UNION SELECT * FROM tblTransactionRecordSys
+	`).Scan(&transactionRecords).Error
+
+	if err != nil {
+		return nil, nil
+	}
+
+	return transactionRecords, nil
+}
+
 // insertTransactionRecordSys
 func (repo *TransactionRepositoryGorm) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
 	if err := repo.db.Debug().Table("tblTransactionRecordSys").Create(tr).Error; err != nil {
