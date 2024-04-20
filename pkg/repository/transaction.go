@@ -398,6 +398,59 @@ func (repo *TransactionRepositoryGorm) DeleteAllTransactionRecordSys() error {
 	return nil
 }
 
+// QueryUnionNote
+func (repo *TransactionRepositoryGorm) QueryUnionNote() {
+	// Most ORMs seem not support UNION keyword, due to its complexity.
+	// Faced with this situation, community suggest using "Raw" method to do this.
+	// > Reference:
+	// > * https://github.com/go-gorm/gorm/issues/3781
+	// > * https://stackoverflow.com/questions/67190972/how-to-use-mysql-union-all-on-gorm
+	// > * https://gorm.io/docs/sql_builder.html
+
+	var transactionRecords []*model.TransactionRecord
+
+	// Method1: Use Raw SQL with scan to query
+	repo.db.Debug().Raw(`
+	SELECT date, time, stockNo, tranType, quantity, unitPrice
+	FROM tblTransactionRecord
+	UNION SELECT * FROM tblTransactionRecordSys
+	`).Scan(&transactionRecords)
+
+	fmt.Println(transactionRecords[0], "\n\n---")
+
+	var transactionRecords2 []*model.TransactionRecord
+	// Method2: Combine GORM API build Raw SQL
+	repo.db.Debug().Raw("? UNION ?",
+		repo.db.Select("date, time, stockNo, tranType, quantity, unitPrice").Table("tblTransactionRecord"),
+		repo.db.Select("*").Table("tblTransactionRecordSys"),
+	).Scan(&transactionRecords2)
+
+	fmt.Println(transactionRecords2[0], "\n\n---")
+
+	// ---
+	// Sometimes you would like to generate SQL without executing.
+	// The Debug function is not what you expect, you can do as below.
+
+	// Method1: Use Raw SQL without scan
+	query := repo.db.Raw("SELECT * Error SQL Syntax")
+
+	fmt.Println(query.Statement.SQL.String(), "\n\n---")
+
+	// Method2: Use Raw SQL without scan
+	stmt := repo.db.Session(&gorm.Session{DryRun: true}).Select("*").
+		Table("Error SQL Syntax").Find(&model.TransactionRecord{}).Statement
+
+	fmt.Println(stmt.SQL.String())
+	fmt.Println(stmt.Vars, "\n\n---")
+
+	// Method3: Use ToSQL
+	sql := repo.db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.Select("*").Table("Error SQL Syntax").Find(&model.TransactionRecord{})
+	})
+
+	fmt.Println(sql)
+}
+
 // QueryTransactionRecordUnion
 func (repo *TransactionRepositoryGorm) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
 	// SQLite seems to help you sort items by primary key when you query via UNION keyword.
