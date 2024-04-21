@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+
+	"gorm.io/gorm"
 )
 
 type transactionRepository struct {
@@ -15,6 +17,14 @@ func NewTransactionRepository(db *sql.DB) *transactionRepository {
 	return &transactionRepository{
 		db: db,
 	}
+}
+
+type TransactionRepositoryGorm struct {
+	db *gorm.DB
+}
+
+func NewTransactionRepositoryGorm(db *gorm.DB) *TransactionRepositoryGorm {
+	return &TransactionRepositoryGorm{db: db}
 }
 
 func (repo *transactionRepository) prepareStmt(sqlStmt string, tx *sql.Tx) (*sql.Stmt, error) {
@@ -37,8 +47,8 @@ func (repo *transactionRepository) prepareStmt(sqlStmt string, tx *sql.Tx) (*sql
 func (repo *transactionRepository) createTransactionWithTx(t *model.Transaction, tx *sql.Tx) (int, error) {
 	const insertSql string = "" +
 		"INSERT INTO tblTransaction" +
-		"(stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes)" +
-		"VALUES (?, ?, ?, ?, ?, ?, ?)"
+		"(date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes)" +
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 
 	stmt, err := repo.prepareStmt(insertSql, tx)
 	if err != nil {
@@ -46,7 +56,7 @@ func (repo *transactionRepository) createTransactionWithTx(t *model.Transaction,
 	}
 	defer stmt.Close()
 
-	rst, err := stmt.Exec(t.StockNo, t.Date, t.Quantity, t.TranType, t.UnitPrice, t.TotalAmount, t.Taxes)
+	rst, err := stmt.Exec(t.Date, t.Time, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
 	if err != nil {
 		fmt.Println("Error insert database: ", err)
 		return 0, err
@@ -100,8 +110,8 @@ func (repo *transactionRepository) CreateTransactions(ts []*model.Transaction) (
 func (repo *transactionRepository) createTransactionHistoryWithTx(t *model.Transaction, tx *sql.Tx) (int, error) {
 	const insertSql string = "" +
 		"INSERT INTO tblTransactionHistory" +
-		"(stockNo, date, quantity, tranType, unitPrice, totalAmount, taxes)" +
-		"VALUES (?, ?, ?, ?, ?, ?, ?)"
+		"(date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes)" +
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 
 	stmt, err := repo.prepareStmt(insertSql, tx)
 	if err != nil {
@@ -109,7 +119,7 @@ func (repo *transactionRepository) createTransactionHistoryWithTx(t *model.Trans
 	}
 	defer stmt.Close()
 
-	rst, err := stmt.Exec(t.StockNo, t.Date, t.Quantity, t.TranType, t.UnitPrice, t.TotalAmount, t.Taxes)
+	rst, err := stmt.Exec(t.Date, t.Time, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
 	if err != nil {
 		fmt.Println("Error insert database: ", err)
 		return 0, err
@@ -161,13 +171,13 @@ func (repo *transactionRepository) CreateTransactionHistorys(ts []*model.Transac
 // FindFirstPurchase
 func (repo *transactionRepository) FindEarliestTransactionByStockNo(stockNo string) (*model.Transaction, error) {
 	query := "" +
-		"SELECT id, stockNo, date, tranType, quantity, unitPrice, totalAmount, taxes " +
+		"SELECT id, date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes " +
 		"FROM tblTransaction WHERE stockNo = ? " +
 		"ORDER BY date ASC LIMIT 1"
 	row := repo.db.QueryRow(query, stockNo)
 
 	var t model.Transaction
-	err := row.Scan(&t.ID, &t.StockNo, &t.Date, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+	err := row.Scan(&t.ID, &t.Date, &t.Time, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 	if err != nil {
 		return &model.Transaction{}, err
 	}
@@ -185,7 +195,7 @@ func (repo *transactionRepository) QueryInventoryTransactions(stockNo string, qu
 		"	FROM tblTransaction" +
 		"	WHERE stockNo = ?" +
 		") " +
-		"SELECT id, stockNo, date, tranType, quantity, unitPrice, totalAmount, taxes " +
+		"SELECT id, date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes " +
 		"FROM cte WHERE running_total <= ?"
 
 	rows, err := repo.db.Query(query, stockNo, quantity)
@@ -197,7 +207,7 @@ func (repo *transactionRepository) QueryInventoryTransactions(stockNo string, qu
 	var transactions []*model.Transaction
 	for rows.Next() {
 		var t model.Transaction
-		err := rows.Scan(&t.ID, &t.StockNo, &t.Date, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+		err := rows.Scan(&t.ID, &t.Date, &t.Time, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 		if err != nil {
 			return nil, err
 		}
@@ -213,7 +223,7 @@ func (repo *transactionRepository) QueryInventoryTransactions(stockNo string, qu
 
 // queryTransactionAll
 func (repo *transactionRepository) QueryTransactionAll() ([]*model.Transaction, error) {
-	query := `SELECT id, stockNo, tranType, quantity, date, unitPrice, totalAmount, taxes FROM tblTransaction`
+	query := `SELECT id, date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction`
 	rows, err := repo.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -223,7 +233,7 @@ func (repo *transactionRepository) QueryTransactionAll() ([]*model.Transaction, 
 	var transactions []*model.Transaction
 	for rows.Next() {
 		var t model.Transaction
-		err := rows.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.Date, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+		err := rows.Scan(&t.ID, &t.Date, &t.Time, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 		if err != nil {
 			return nil, err
 		}
@@ -239,11 +249,11 @@ func (repo *transactionRepository) QueryTransactionAll() ([]*model.Transaction, 
 
 // queryTransactionByID
 func (repo *transactionRepository) QueryTransactionByID(id int) (*model.Transaction, error) {
-	query := `SELECT id, stockNo, tranType, quantity, date, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = ?`
+	query := `SELECT id, date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE id = ?`
 	row := repo.db.QueryRow(query, id)
 
 	var t model.Transaction
-	err := row.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.Date, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+	err := row.Scan(&t.ID, &t.Date, &t.Time, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +279,7 @@ func (repo *transactionRepository) QueryTransactionByDetails(stockNo string, tra
 		args = append(args, date)
 	}
 
-	query := fmt.Sprintf("SELECT id, stockNo, tranType, quantity, date, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
+	query := fmt.Sprintf("SELECT id, date, time, stockNo, tranType, quantity, unitPrice, totalAmount, taxes FROM tblTransaction WHERE %s", strings.Join(conditions, " AND "))
 
 	rows, err := repo.db.Query(query, args...)
 	if err != nil {
@@ -280,7 +290,7 @@ func (repo *transactionRepository) QueryTransactionByDetails(stockNo string, tra
 	var transactions []*model.Transaction
 	for rows.Next() {
 		var t model.Transaction
-		err := rows.Scan(&t.ID, &t.StockNo, &t.TranType, &t.Quantity, &t.Date, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
+		err := rows.Scan(&t.ID, &t.Date, &t.Time, &t.StockNo, &t.TranType, &t.Quantity, &t.UnitPrice, &t.TotalAmount, &t.Taxes)
 		if err != nil {
 			return nil, err
 		}
@@ -298,9 +308,9 @@ func (repo *transactionRepository) QueryTransactionByDetails(stockNo string, tra
 func (repo *transactionRepository) UpdateTransaction(id int, t *model.Transaction) error {
 	query := "" +
 		"UPDATE tblTransaction " +
-		"SET stockNo = ?, date = ?, quantity = ?, tranType = ?, unitPrice = ?, totalAmount = ?, taxes = ? " +
+		"SET date = ?, time = ?, stockNo = ?, tranType = ?, quantity = ?, unitPrice = ?, totalAmount = ?, taxes = ? " +
 		"WHERE id = ?"
-	_, err := repo.db.Exec(query, t.StockNo, t.Date, t.Quantity, t.TranType, t.UnitPrice, t.TotalAmount, t.Taxes, t.ID)
+	_, err := repo.db.Exec(query, t.Date, t.Time, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes, t.ID)
 	return err
 }
 
@@ -344,6 +354,143 @@ func (repo *transactionRepository) MoveInventoryToTransactionHistorys(ts []*mode
 	_, err = repo.CreateTransactionHistorys(ts)
 	if err != nil {
 		return fmt.Errorf("error creating transaction history: %v", err)
+	}
+
+	return nil
+}
+
+// QueryCapitalReductionAll
+func (repo *TransactionRepositoryGorm) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
+	var capitalReductions []*model.CapitalReduction
+	// 使用 Gorm 框架的 Find 方法來執行查詢
+	if err := repo.db.Debug().Table("tblCapitalReduction").Find(&capitalReductions).Error; err != nil {
+		return nil, err
+	}
+
+	// for _, cr := range capitalReductions {
+	// 	fmt.Println(cr)
+	// }
+
+	return capitalReductions, nil
+}
+
+// QueryTransactionRecordByStockNo
+func (repo *TransactionRepositoryGorm) QueryTransactionRecordByStockNo(stockNo string, date string) ([]*model.TransactionRecord, error) {
+	var transactionRecords []*model.TransactionRecord
+	err := repo.db.Debug().Table("tblTransactionRecord").Where("stockNo = ? and date < ?", stockNo, date).Find(&transactionRecords).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// for _, cr := range transactionRecords {
+	// 	fmt.Println(cr)
+	// }
+
+	return transactionRecords, nil
+}
+
+// deleteAlltblTransaction
+func (repo *TransactionRepositoryGorm) DeleteAlltblTransaction() error {
+	if err := repo.db.Debug().Exec("DELETE FROM tblTransaction").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// deleteAlltblTransactionHistory
+func (repo *TransactionRepositoryGorm) DeleteAlltblTransactionHistory() error {
+	if err := repo.db.Debug().Exec("DELETE FROM tblTransactionHistory").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// deleteAllTransactionRecordSys
+func (repo *TransactionRepositoryGorm) DeleteAllTransactionRecordSys() error {
+	if err := repo.db.Debug().Exec("DELETE FROM tblTransactionRecordSys").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// QueryUnionNote
+func (repo *TransactionRepositoryGorm) QueryUnionNote() {
+	// Most ORMs seem not support UNION keyword, due to its complexity.
+	// Faced with this situation, community suggest using "Raw" method to do this.
+	// > Reference:
+	// > * https://github.com/go-gorm/gorm/issues/3781
+	// > * https://stackoverflow.com/questions/67190972/how-to-use-mysql-union-all-on-gorm
+	// > * https://gorm.io/docs/sql_builder.html
+
+	var transactionRecords []*model.TransactionRecord
+
+	// Method1: Use Raw SQL with scan to query
+	repo.db.Debug().Raw(`
+	SELECT date, time, stockNo, tranType, quantity, unitPrice
+	FROM tblTransactionRecord
+	UNION SELECT * FROM tblTransactionRecordSys
+	`).Scan(&transactionRecords)
+
+	fmt.Println(transactionRecords[0], "\n\n---")
+
+	var transactionRecords2 []*model.TransactionRecord
+	// Method2: Combine GORM API build Raw SQL
+	repo.db.Debug().Raw("? UNION ?",
+		repo.db.Select("date, time, stockNo, tranType, quantity, unitPrice").Table("tblTransactionRecord"),
+		repo.db.Select("*").Table("tblTransactionRecordSys"),
+	).Scan(&transactionRecords2)
+
+	fmt.Println(transactionRecords2[0], "\n\n---")
+
+	// ---
+	// Sometimes you would like to generate SQL without executing.
+	// The Debug function is not what you expect, you can do as below.
+
+	// Method1: Use Raw SQL without scan
+	query := repo.db.Raw("SELECT * Error SQL Syntax")
+
+	fmt.Println(query.Statement.SQL.String(), "\n\n---")
+
+	// Method2: Use Raw SQL without scan
+	stmt := repo.db.Session(&gorm.Session{DryRun: true}).Select("*").
+		Table("Error SQL Syntax").Find(&model.TransactionRecord{}).Statement
+
+	fmt.Println(stmt.SQL.String())
+	fmt.Println(stmt.Vars, "\n\n---")
+
+	// Method3: Use ToSQL
+	sql := repo.db.ToSQL(func(tx *gorm.DB) *gorm.DB {
+		return tx.Select("*").Table("Error SQL Syntax").Find(&model.TransactionRecord{})
+	})
+
+	fmt.Println(sql)
+}
+
+// QueryTransactionRecordUnion
+func (repo *TransactionRepositoryGorm) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
+	// SQLite seems to help you sort items by primary key when you query via UNION keyword.
+	// Or you can add ORDER keyword in the last line to sort it.
+	var transactionRecords []*model.TransactionRecord
+	err := repo.db.Debug().Raw(`
+	SELECT date, time, stockNo, tranType, quantity, unitPrice
+	FROM tblTransactionRecord
+	UNION SELECT * FROM tblTransactionRecordSys
+	`).Scan(&transactionRecords).Error
+
+	if err != nil {
+		return nil, nil
+	}
+
+	return transactionRecords, nil
+}
+
+// insertTransactionRecordSys
+func (repo *TransactionRepositoryGorm) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
+	if err := repo.db.Debug().Table("tblTransactionRecordSys").Create(tr).Error; err != nil {
+		return err
 	}
 
 	return nil

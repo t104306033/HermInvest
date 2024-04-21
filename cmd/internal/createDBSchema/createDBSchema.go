@@ -19,7 +19,7 @@ func main() {
 
 	// Create tblTransactionRecord table
 	_, err = db.Exec(`
-		CREATE TABLE "tblTransactionRecord" (
+		CREATE TABLE IF NOT EXISTS "tblTransactionRecord" (
 			"date"	TEXT NOT NULL,
 			"time"	TEXT NOT NULL,
 			"stockNo"	TEXT NOT NULL,
@@ -36,6 +36,58 @@ func main() {
 		return
 	}
 	fmt.Println("Table tblTransactionRecord created successfully")
+
+	// Create tblTransactionRecordSys table
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS "tblTransactionRecordSys" (
+			"date"	TEXT NOT NULL,
+			"time"	TEXT NOT NULL,
+			"stockNo"	TEXT NOT NULL,
+			"tranType"	INTEGER NOT NULL,
+			"quantity"	INTEGER NOT NULL,
+			"unitPrice"	REAL NOT NULL
+		)
+	`)
+	if err != nil {
+		fmt.Println("Error creating tblTransactionRecordSys table:", err)
+		return
+	}
+	fmt.Println("Table tblTransactionRecordSys created successfully")
+
+	// Create tblCapitalReduction table
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS  tblCapitalReduction (
+			YQ TEXT NOT NULL,
+			stockNo TEXT NOT NULL,
+			capitalReductionDate TEXT NOT NULL,
+			distributionDate TEXT NOT NULL,
+			cash REAL,
+			ratio REAL,
+			newStockNo TEXT
+		)
+	`)
+	if err != nil {
+		fmt.Println("Error creating tblCapitalReduction table:", err)
+		return
+	}
+	fmt.Println("Table tblCapitalReduction created successfully")
+
+	// Create tblDividend table
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS tblDividend (
+			YQ TEXT NOT NULL,
+			stockNo TEXT NOT NULL,
+			ExDividendDate TEXT NOT NULL,
+			distributionDate TEXT NOT NULL,
+			cashDividend REAL,
+			stockDividend REAL
+		)
+	`)
+	if err != nil {
+		fmt.Println("Error creating tblDividend table:", err)
+		return
+	}
+	fmt.Println("Table tblDividend created successfully")
 
 	// Create tblStockMapping table
 	_, err = db.Exec(`
@@ -54,11 +106,12 @@ func main() {
 	// Create tblTransaction table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS tblTransaction (
-			id INTEGER UNIQUE,
+			id INTEGER,
+			date TEXT NOT NULL,
+			time TEXT NOT NULL,
 			stockNo TEXT NOT NULL,
-			date TEXT,
-			quantity INTEGER NOT NULL,
 			tranType INTEGER NOT NULL,
+			quantity INTEGER NOT NULL,
 			unitPrice REAL NOT NULL,
 			totalAmount INTEGER NOT NULL,
 			taxes INTEGER NOT NULL,
@@ -74,11 +127,12 @@ func main() {
 	// Create tblTransactionHistory table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS tblTransactionHistory (
-			id INTEGER UNIQUE,
+			id INTEGER,
+			date TEXT NOT NULL,
+			time TEXT NOT NULL,
 			stockNo TEXT NOT NULL,
-			date TEXT,
-			quantity INTEGER NOT NULL,
 			tranType INTEGER NOT NULL,
+			quantity INTEGER NOT NULL,
 			unitPrice REAL NOT NULL,
 			totalAmount INTEGER NOT NULL,
 			taxes INTEGER NOT NULL,
