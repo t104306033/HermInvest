@@ -389,6 +389,24 @@ func (repo *TransactionRepositoryGorm) QueryTransactionRecordByStockNo(stockNo s
 	return transactionRecords, nil
 }
 
+// deleteAlltblTransaction
+func (repo *TransactionRepositoryGorm) DeleteAlltblTransaction() error {
+	if err := repo.db.Debug().Exec("DELETE FROM tblTransaction").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// deleteAlltblTransactionHistory
+func (repo *TransactionRepositoryGorm) DeleteAlltblTransactionHistory() error {
+	if err := repo.db.Debug().Exec("DELETE FROM tblTransactionHistory").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // deleteAllTransactionRecordSys
 func (repo *TransactionRepositoryGorm) DeleteAllTransactionRecordSys() error {
 	if err := repo.db.Debug().Exec("DELETE FROM tblTransactionRecordSys").Error; err != nil {
