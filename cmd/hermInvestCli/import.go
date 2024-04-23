@@ -97,7 +97,7 @@ func importRun(cmd *cobra.Command, args []string) {
 	}
 
 	// init transactionRepository
-	repo := repository.NewTransactionRepository(db)
+	repo := repository.NewRepository(db)
 
 	serv := service.NewService(repo)
 
