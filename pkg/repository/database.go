@@ -1,12 +1,14 @@
 package repository
 
 import (
+	"fmt"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-func GetDBConnection() (*gorm.DB, error) {
+func GetDBConnection() *gorm.DB {
 	// TODO: extract DB connection to configuration
 	// sqlite3 connection with foreign keys enabled
 	// TODO: need to check db file, if not exist, exit. otherwise ... db will be created
@@ -18,8 +20,8 @@ func GetDBConnection() (*gorm.DB, error) {
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
-		return nil, err
+		panic(fmt.Errorf("error getting DB connection: %s", err))
 	}
 
-	return db, nil
+	return db
 }

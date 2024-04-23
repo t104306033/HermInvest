@@ -2,14 +2,10 @@ package service
 
 import (
 	"HermInvest/pkg/repository"
-	"fmt"
 )
 
 func InitializeService() *service {
-	db, err := repository.GetDBConnection()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
+	db := repository.GetDBConnection()
 
 	// init transactionRepository
 	repo := repository.NewRepository(db)
