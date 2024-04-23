@@ -2,24 +2,23 @@ package service
 
 import (
 	"HermInvest/pkg/model"
-	"HermInvest/pkg/repository"
 	"fmt"
 
 	"gorm.io/gorm"
 )
 
-type Service struct {
-	repo *repository.Repository
+type service struct {
+	repo repositorier
 }
 
-func NewService(repository *repository.Repository) *Service {
-	return &Service{repo: repository}
+func NewService(repository repositorier) *service {
+	return &service{repo: repository}
 }
 
 // addTransactionTailRecursion add new transaction records with tail recursion,
 // When adding, inventory and transaction history, especially write-offs and
 // tails, need to be considered.
-func (serv *Service) addTransactionTailRecursion(newTransaction *model.Transaction, remainingQuantity int) (*model.Transaction, error) {
+func (serv *service) addTransactionTailRecursion(newTransaction *model.Transaction, remainingQuantity int) (*model.Transaction, error) {
 	// Principles:
 	// 1. Ensure that each transaction has a corresponding transaction record.
 	// 2. Update inventory quantities based on transactions, including adding,
@@ -149,7 +148,7 @@ func (serv *Service) addTransactionTailRecursion(newTransaction *model.Transacti
 // AddTransaction add the transaction from the input to the inventory.
 // It will add or update transactions in the inventory and add history.
 // Return the modified transaction record in the inventory
-func (serv *Service) AddTransaction(newTransaction *model.Transaction) (*model.Transaction, error) {
+func (serv *service) AddTransaction(newTransaction *model.Transaction) (*model.Transaction, error) {
 	remainingQuantity := newTransaction.Quantity
 	return serv.addTransactionTailRecursion(newTransaction, remainingQuantity)
 }

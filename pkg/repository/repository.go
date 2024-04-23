@@ -7,12 +7,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type Repository struct {
+type repository struct {
 	db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+func NewRepository(db *gorm.DB) *repository {
+	return &repository{db: db}
 }
 
 /******************************************************************************
@@ -20,7 +20,7 @@ func NewRepository(db *gorm.DB) *Repository {
  ******************************************************************************/
 
 // CreateTransaction: insert transaction and return inserted id
-func (repo *Repository) CreateTransaction(t *model.Transaction) (int, error) {
+func (repo *repository) CreateTransaction(t *model.Transaction) (int, error) {
 	result := repo.db.Table("tblTransaction").Create(&t)
 	if result.Error != nil {
 		return 0, result.Error
@@ -30,7 +30,7 @@ func (repo *Repository) CreateTransaction(t *model.Transaction) (int, error) {
 }
 
 // CreateTransactions: insert transactions and return inserted ids
-func (repo *Repository) CreateTransactions(ts []*model.Transaction) ([]int, error) {
+func (repo *repository) CreateTransactions(ts []*model.Transaction) ([]int, error) {
 	result := repo.db.Table("tblTransaction").Create(&ts)
 	if result.Error != nil {
 		return nil, result.Error
@@ -44,7 +44,7 @@ func (repo *Repository) CreateTransactions(ts []*model.Transaction) ([]int, erro
 	return insertedIDs, nil
 }
 
-func (repo *Repository) FindEarliestTransactionByStockNo(stockNo string) (*model.Transaction, error) {
+func (repo *repository) FindEarliestTransactionByStockNo(stockNo string) (*model.Transaction, error) {
 	var transaction model.Transaction
 	err := repo.db.Table("tblTransaction").Where("stockNo = ?", stockNo).
 		Order("date ASC, time ASC").First(&transaction).Error
@@ -56,7 +56,7 @@ func (repo *Repository) FindEarliestTransactionByStockNo(stockNo string) (*model
 }
 
 // QueryTransactionAll
-func (repo *Repository) QueryTransactionAll() ([]*model.Transaction, error) {
+func (repo *repository) QueryTransactionAll() ([]*model.Transaction, error) {
 	var transactions []*model.Transaction
 	err := repo.db.Table("tblTransaction").Find(&transactions).Error
 	if err != nil {
@@ -66,7 +66,7 @@ func (repo *Repository) QueryTransactionAll() ([]*model.Transaction, error) {
 }
 
 // QueryTransactionByID
-func (repo *Repository) QueryTransactionByID(id int) (*model.Transaction, error) {
+func (repo *repository) QueryTransactionByID(id int) (*model.Transaction, error) {
 	var transaction *model.Transaction
 	err := repo.db.Table("tblTransaction").Take(&transaction, id).Error
 	if err != nil {
@@ -76,7 +76,7 @@ func (repo *Repository) QueryTransactionByID(id int) (*model.Transaction, error)
 }
 
 // QueryTransactionByDetails
-func (repo *Repository) QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*model.Transaction, error) {
+func (repo *repository) QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*model.Transaction, error) {
 	var transactions []*model.Transaction
 
 	if stockNo != "" {
@@ -97,7 +97,7 @@ func (repo *Repository) QueryTransactionByDetails(stockNo string, tranType int, 
 }
 
 // updateTransaction
-func (repo *Repository) UpdateTransaction(id int, t *model.Transaction) error {
+func (repo *repository) UpdateTransaction(id int, t *model.Transaction) error {
 	err := repo.db.Table("tblTransaction").Updates(t).Error
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (repo *Repository) UpdateTransaction(id int, t *model.Transaction) error {
 }
 
 // deleteAlltblTransaction
-func (repo *Repository) DeleteAlltblTransaction() error {
+func (repo *repository) DeleteAlltblTransaction() error {
 	if err := repo.db.Exec("DELETE FROM tblTransaction").Error; err != nil {
 		return err
 	}
@@ -114,12 +114,12 @@ func (repo *Repository) DeleteAlltblTransaction() error {
 	return nil
 }
 
-func (repo *Repository) DeleteTransaction(id int) error {
+func (repo *repository) DeleteTransaction(id int) error {
 	result := repo.db.Table("tblTransaction").Delete(&model.Transaction{ID: id})
 	return result.Error
 }
 
-func (repo *Repository) DeleteTransactions(ids []int) error {
+func (repo *repository) DeleteTransactions(ids []int) error {
 	result := repo.db.Table("tblTransaction").Delete(&model.Transaction{}, "id IN ?", ids)
 	return result.Error
 }
@@ -129,7 +129,7 @@ func (repo *Repository) DeleteTransactions(ids []int) error {
  ******************************************************************************/
 
 // CreateTransactionHistory: insert transaction and return inserted id
-func (repo *Repository) CreateTransactionHistory(t *model.Transaction) (int, error) {
+func (repo *repository) CreateTransactionHistory(t *model.Transaction) (int, error) {
 	result := repo.db.Table("tblTransactionHistory").Create(&t)
 	if result.Error != nil {
 		return 0, result.Error
@@ -139,7 +139,7 @@ func (repo *Repository) CreateTransactionHistory(t *model.Transaction) (int, err
 }
 
 // CreateTransactionHistorys: insert transactions and return inserted ids
-func (repo *Repository) CreateTransactionHistorys(ts []*model.Transaction) ([]int, error) {
+func (repo *repository) CreateTransactionHistorys(ts []*model.Transaction) ([]int, error) {
 	result := repo.db.Table("tblTransactionHistory").Create(&ts)
 	if result.Error != nil {
 		return nil, result.Error
@@ -154,7 +154,7 @@ func (repo *Repository) CreateTransactionHistorys(ts []*model.Transaction) ([]in
 }
 
 // deleteAlltblTransactionHistory
-func (repo *Repository) DeleteAlltblTransactionHistory() error {
+func (repo *repository) DeleteAlltblTransactionHistory() error {
 	if err := repo.db.Exec("DELETE FROM tblTransactionHistory").Error; err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (repo *Repository) DeleteAlltblTransactionHistory() error {
  ******************************************************************************/
 
 // QueryCapitalReductionAll
-func (repo *Repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
+func (repo *repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
 	var capitalReductions []*model.CapitalReduction
 	// 使用 Gorm 框架的 Find 方法來執行查詢
 	if err := repo.db.Table("tblCapitalReduction").Find(&capitalReductions).Error; err != nil {
@@ -186,7 +186,7 @@ func (repo *Repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, e
  ******************************************************************************/
 
 // insertTransactionRecordSys
-func (repo *Repository) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
+func (repo *repository) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
 	if err := repo.db.Table("tblTransactionRecordSys").Create(tr).Error; err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func (repo *Repository) InsertTransactionRecordSys(tr *model.TransactionRecord) 
 }
 
 // QueryTransactionRecordByStockNo
-func (repo *Repository) QueryTransactionRecordByStockNo(stockNo string, date string) ([]*model.TransactionRecord, error) {
+func (repo *repository) QueryTransactionRecordByStockNo(stockNo string, date string) ([]*model.TransactionRecord, error) {
 	var transactionRecords []*model.TransactionRecord
 	err := repo.db.Table("tblTransactionRecord").Where("stockNo = ? and date < ?", stockNo, date).Find(&transactionRecords).Error
 	if err != nil {
@@ -210,7 +210,7 @@ func (repo *Repository) QueryTransactionRecordByStockNo(stockNo string, date str
 }
 
 // QueryTransactionRecordUnion
-func (repo *Repository) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
+func (repo *repository) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
 	// SQLite seems to help you sort items by primary key when you query via UNION keyword.
 	// Or you can add ORDER keyword in the last line to sort it.
 	var transactionRecords []*model.TransactionRecord
@@ -228,7 +228,7 @@ func (repo *Repository) QueryTransactionRecordUnion() ([]*model.TransactionRecor
 }
 
 // deleteAllTransactionRecordSys
-func (repo *Repository) DeleteAllTransactionRecordSys() error {
+func (repo *repository) DeleteAllTransactionRecordSys() error {
 	if err := repo.db.Exec("DELETE FROM tblTransactionRecordSys").Error; err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func (repo *Repository) DeleteAllTransactionRecordSys() error {
  ******************************************************************************/
 
 // QueryUnionNote
-func (repo *Repository) QueryUnionNote() {
+func (repo *repository) QueryUnionNote() {
 	// Most ORMs seem not support UNION keyword, due to its complexity.
 	// Faced with this situation, community suggest using "Raw" method to do this.
 	// > Reference:
