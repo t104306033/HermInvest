@@ -1,7 +1,7 @@
 package main
 
 import (
-	"HermInvest/pkg/repository"
+	"HermInvest/pkg/service"
 	"fmt"
 	"strconv"
 
@@ -40,15 +40,9 @@ func updateRun(cmd *cobra.Command, args []string) {
 		fmt.Println("Error parsing float: ", err)
 	}
 
-	db, err := repository.GetDBConnection()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
+	serv := service.InitializeService()
 
-	// init transactionRepository
-	repo := repository.NewRepository(db)
-
-	t, err := repo.QueryTransactionByID(transactionID)
+	t, err := serv.QueryTransactionByID(transactionID)
 	if err != nil {
 		fmt.Println("Error querying database:", err)
 	}
@@ -57,7 +51,7 @@ func updateRun(cmd *cobra.Command, args []string) {
 	t.SetUnitPrice(unitPrice) // update unit Price
 
 	// update db
-	err = repo.UpdateTransaction(t.ID, t)
+	err = serv.UpdateTransaction(t.ID, t)
 	if err != nil {
 		fmt.Println("Error updating stock information:", err)
 		return

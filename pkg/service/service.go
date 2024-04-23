@@ -152,3 +152,56 @@ func (serv *service) AddTransaction(newTransaction *model.Transaction) (*model.T
 	remainingQuantity := newTransaction.Quantity
 	return serv.addTransactionTailRecursion(newTransaction, remainingQuantity)
 }
+
+// ---
+
+func (serv *service) DeleteTransaction(id int) error {
+	return serv.repo.DeleteTransaction(id)
+}
+
+func (serv *service) QueryTransactionAll() ([]*model.Transaction, error) {
+	return serv.repo.QueryTransactionAll()
+}
+
+func (serv *service) QueryTransactionByID(id int) (*model.Transaction, error) {
+	return serv.repo.QueryTransactionByID(id)
+}
+
+func (serv *service) QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*model.Transaction, error) {
+	return serv.repo.QueryTransactionByDetails(stockNo, tranType, date)
+}
+
+func (serv *service) UpdateTransaction(id int, t *model.Transaction) error {
+	return serv.repo.UpdateTransaction(id, t)
+}
+
+func (serv *service) DeleteAllTransactionRecordSys() error {
+	return serv.repo.DeleteAllTransactionRecordSys()
+}
+
+func (serv *service) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
+	return serv.repo.QueryCapitalReductionAll()
+}
+
+func (serv *service) QueryTransactionRecordByStockNo(stockNo string, date string) ([]*model.TransactionRecord, error) {
+	return serv.repo.QueryTransactionRecordByStockNo(stockNo, date)
+}
+
+func (serv *service) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
+	return serv.repo.InsertTransactionRecordSys(tr)
+}
+
+func (serv *service) DeleteAlltblTransaction() error {
+	return serv.repo.DeleteAlltblTransaction()
+}
+
+func (serv *service) DeleteAlltblTransactionHistory() error {
+	return serv.repo.DeleteAlltblTransactionHistory()
+}
+
+func (serv *service) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
+	return serv.repo.QueryTransactionRecordUnion()
+}
+func (serv *service) CreateTransactions(ts []*model.Transaction) ([]int, error) {
+	return serv.repo.CreateTransactions(ts)
+}
