@@ -70,7 +70,7 @@ func isFileExist(path string) error {
 
 func isSQLiteFile(db *gorm.DB) error {
 	var schemaVersion int
-	err := db.Raw("PRAGMA schema.schema_version;").Scan(&schemaVersion).Error
+	err := db.Raw("PRAGMA schema_version;").Scan(&schemaVersion).Error
 	if err != nil {
 		return fmt.Errorf("failed to execute 'PRAGMA schema_version': %w", err)
 	}
@@ -84,7 +84,7 @@ func isSQLiteFile(db *gorm.DB) error {
 
 func checkDBSchema(db *gorm.DB) error {
 	var result string
-	err := db.Raw("PRAGMA schema.integrity_check;").Scan(&result).Error
+	err := db.Raw("PRAGMA integrity_check;").Scan(&result).Error
 	if err != nil {
 		return fmt.Errorf("failed to execute 'PRAGMA integrity_check': %w", err)
 		// Or use 'PRAGMA schema.quick_check;'
