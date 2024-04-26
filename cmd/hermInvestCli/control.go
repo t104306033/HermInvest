@@ -2,7 +2,7 @@ package main
 
 import (
 	"HermInvest/pkg/model"
-	"HermInvest/pkg/repository"
+	"HermInvest/pkg/service"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -18,24 +18,18 @@ func init() {
 }
 
 func capitalReductionTransactionGenerator() {
-	db, err := repository.GetDBConnectionGorm()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
+	serv := service.InitializeService()
 
-	// init transactionRepository
-	repo := repository.NewTransactionRepositoryGorm(db)
-
-	repo.DeleteAllTransactionRecordSys()
+	serv.DeleteAllTransactionRecordSys()
 
 	// 1. Query all transaction records from tblCapitalReduction
-	crs, _ := repo.QueryCapitalReductionAll()
+	crs, _ := serv.QueryCapitalReductionAll()
 
 	// 2. Iterate over each capital reduction record
 	for _, cr := range crs {
 		fmt.Println("\n---\n", cr)
 		// Query transaction records by stock number
-		trs, _ := repo.QueryTransactionRecordByStockNo(cr.StockNo, cr.CapitalReductionDate)
+		trs, _ := serv.QueryTransactionRecordByStockNo(cr.StockNo, cr.CapitalReductionDate)
 
 		remainingTrs := make([]*model.TransactionRecord, 0)
 		for _, tr := range trs {
@@ -64,7 +58,7 @@ func capitalReductionTransactionGenerator() {
 		// 3. insert into tblTransactionRecordSys
 		capitalReductionRecord := model.NewTransactionRecord(
 			cr.CapitalReductionDate, "08:00:00", cr.StockNo, -1, totalQuantity, avgUnitPrice)
-		repo.InsertTransactionRecordSys(capitalReductionRecord)
+		serv.InsertTransactionRecordSys(capitalReductionRecord)
 
 		newStockNo := cr.NewStockNo
 		if newStockNo == "" {
@@ -75,7 +69,7 @@ func capitalReductionTransactionGenerator() {
 		newAvgUnitPrice := (avgUnitPrice - cr.Cash) / (1 - cr.Ratio)
 		newCapitalReductionRecord := model.NewTransactionRecord(
 			cr.DistributionDate, "08:00:10", newStockNo, 1, newQuantity, newAvgUnitPrice)
-		repo.InsertTransactionRecordSys(newCapitalReductionRecord)
+		serv.InsertTransactionRecordSys(newCapitalReductionRecord)
 
 		// deal with cash from tblCapitalReduction
 	}
@@ -83,36 +77,21 @@ func capitalReductionTransactionGenerator() {
 }
 
 func transactionReGenerator() {
-	db, err := repository.GetDBConnectionGorm()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
-
-	// init transactionRepository
-	repo := repository.NewTransactionRepositoryGorm(db)
-
-	dbNative, err := repository.GetDBConnection()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
-	defer dbNative.Close()
-
-	// init transactionRepository
-	repoNative := repository.NewTransactionRepository(dbNative)
+	serv := service.InitializeService()
 
 	// capitalReductionTransactionGenerator()
 
-	repo.DeleteAlltblTransaction()
-	repo.DeleteAlltblTransactionHistory()
+	serv.DeleteAlltblTransaction()
+	serv.DeleteAlltblTransactionHistory()
 
 	// repo.QueryTransactionRecordUnion()
-	trs, _ := repo.QueryTransactionRecordUnion()
+	trs, _ := serv.QueryTransactionRecordUnion()
 
 	var transactions []*model.Transaction
 	for _, tr := range trs {
 		newTransaction := model.NewTransactionFromInput(
 			tr.Date, tr.Time, tr.StockNo, tr.TranType, tr.Quantity, tr.UnitPrice)
-		t, err := repoNative.AddTransaction(newTransaction)
+		t, err := serv.AddTransaction(newTransaction)
 		if err != nil {
 			fmt.Println("Error adding transaction: ", err)
 		} else if t != nil {
@@ -122,6 +101,22 @@ func transactionReGenerator() {
 	displayResults(transactions)
 }
 
+func test() {
+	serv := service.InitializeService()
+
+	newTransactions := make([]*model.Transaction, 0)
+	newTransaction1 := model.NewTransactionFromInput(
+		"2023-01-01", "09:00:00", "0050", 1, 2000, 22.6)
+	newTransaction2 := model.NewTransactionFromInput(
+		"2023-01-01", "09:00:00", "0050", 1, 3000, 22.7)
+	newTransactions = append(newTransactions, newTransaction1)
+	newTransactions = append(newTransactions, newTransaction2)
+
+	ids, _ := serv.CreateTransactions(newTransactions)
+	fmt.Print(ids)
+
+}
+
 func controlRun(cmd *cobra.Command, args []string) {
-	transactionReGenerator()
+	capitalReductionTransactionGenerator()
 }

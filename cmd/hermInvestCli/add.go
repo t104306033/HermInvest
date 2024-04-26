@@ -2,7 +2,7 @@ package main
 
 import (
 	"HermInvest/pkg/model"
-	"HermInvest/pkg/repository"
+	"HermInvest/pkg/service"
 	"fmt"
 	"strconv"
 	"time"
@@ -41,14 +41,7 @@ func addRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	db, err := repository.GetDBConnection()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
-	defer db.Close()
-
-	// init transactionRepository
-	repo := repository.NewTransactionRepository(db)
+	serv := service.InitializeService()
 
 	// add stock in inventory
 	// 1. new transaction from input
@@ -58,7 +51,7 @@ func addRun(cmd *cobra.Command, args []string) {
 	// TODO: service.addTransaction() AddTransactionAndUpdateInventory
 	newTransaction := model.NewTransactionFromInput(tranDate, tranTime, stockNo, tranType, quantity, unitPrice)
 
-	t, err := repo.AddTransaction(newTransaction)
+	t, err := serv.AddTransaction(newTransaction)
 	if err != nil {
 		fmt.Println("Error adding transaction: ", err)
 	} else if t != nil {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"HermInvest/pkg/model"
-	"HermInvest/pkg/repository"
+	"HermInvest/pkg/service"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -90,14 +90,7 @@ func importRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	db, err := repository.GetDBConnection()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
-	defer db.Close()
-
-	// init transactionRepository
-	repo := repository.NewTransactionRepository(db)
+	serv := service.InitializeService()
 
 	var transactions []*model.Transaction
 	for _, row := range rows {
@@ -116,7 +109,7 @@ func importRun(cmd *cobra.Command, args []string) {
 		}
 
 		newTransaction := model.NewTransactionFromInput(tranDate, tranTime, stockNo, tranType, quantity, unitPrice)
-		t, err := repo.AddTransaction(newTransaction)
+		t, err := serv.AddTransaction(newTransaction)
 		if err != nil {
 			fmt.Println("Error adding transaction: ", err)
 		} else if t != nil {

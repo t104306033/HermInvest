@@ -2,7 +2,7 @@ package main
 
 import (
 	"HermInvest/pkg/model"
-	"HermInvest/pkg/repository"
+	"HermInvest/pkg/service"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -49,31 +49,24 @@ func queryRun(cmd *cobra.Command, args []string) error {
 	tranType, _ := cmd.Flags().GetInt("type")
 	date, _ := cmd.Flags().GetString("date")
 
-	db, err := repository.GetDBConnection()
-	if err != nil {
-		fmt.Println("Error geting DB connection: ", err)
-	}
-	defer db.Close()
-
-	// init transactionRepository
-	repo := repository.NewTransactionRepository(db)
+	serv := service.InitializeService()
 
 	var transactions []*model.Transaction
 	var transactionsErr error
 	if all {
-		transactions, transactionsErr = repo.QueryTransactionAll()
+		transactions, transactionsErr = serv.QueryTransactionAll()
 	} else if id != 0 {
 		var transaction *model.Transaction
-		transaction, transactionsErr = repo.QueryTransactionByID(id)
+		transaction, transactionsErr = serv.QueryTransactionByID(id)
 		transactions = append(transactions, transaction)
 	} else {
-		transactions, transactionsErr = repo.QueryTransactionByDetails(stockNo, tranType, date)
+		transactions, transactionsErr = serv.QueryTransactionByDetails(stockNo, tranType, date)
 	}
 	if transactionsErr != nil {
 		fmt.Println("Error querying database:", transactionsErr)
+	} else {
+		displayResults(transactions)
 	}
-
-	displayResults(transactions)
 
 	return nil
 }
@@ -81,6 +74,6 @@ func queryRun(cmd *cobra.Command, args []string) error {
 func displayResults(transactions []*model.Transaction) {
 	fmt.Print("ID,\tStock No,\tType,\tQty(shares),\tUnit Price,\tTotal Amount,\ttaxes\n")
 	for _, t := range transactions {
-		fmt.Printf("%d,\t%s,\t\t%d,\t%d,\t\t%.2f,\t\t%d,\t\t%d\n", t.ID, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
+		fmt.Printf("%d,\t%8s,\t%4d,\t%11d,\t%10.2f,\t%12d,\t%5d\n", t.ID, t.StockNo, t.TranType, t.Quantity, t.UnitPrice, t.TotalAmount, t.Taxes)
 	}
 }
