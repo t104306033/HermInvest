@@ -250,3 +250,27 @@ func (serv *service) RebuildCapitalReduction() error {
 	return nil
 
 }
+
+func (serv *service) RebuildTransaction() error {
+
+	serv.repo.DeleteAlltblTransaction()
+	serv.repo.DeleteAlltblTransactionHistory()
+
+	trs, _ := serv.repo.QueryTransactionRecordUnion()
+
+	// var transactions []*model.Transaction
+	for _, tr := range trs {
+		newTransaction := model.NewTransactionFromInput(
+			tr.Date, tr.Time, tr.StockNo, tr.TranType, tr.Quantity, tr.UnitPrice)
+		_, err := serv.AddTransaction(newTransaction)
+		if err != nil {
+			fmt.Println("Error adding transaction: ", err)
+		}
+		// else if t != nil {
+		// 	transactions = append(transactions, t)
+		// }
+	}
+	// displayResults(transactions)
+
+	return nil
+}
