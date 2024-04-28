@@ -118,5 +118,9 @@ func test() {
 }
 
 func controlRun(cmd *cobra.Command, args []string) {
-	capitalReductionTransactionGenerator()
+	// capitalReductionTransactionGenerator()
+	serv := service.InitializeService()
+
+	serv.Test()
+	serv.Test2()
 }

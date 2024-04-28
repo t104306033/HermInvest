@@ -15,6 +15,27 @@ func NewRepository(db *gorm.DB) *repository {
 	return &repository{db: db}
 }
 
+func (repo *repository) WithTrx(trxHandle *gorm.DB) model.Repositorier {
+	// if trxHandle == nil {
+	// 	fmt.Println("WithTrx: Transaction Database not found")
+	// 	return repo
+	// }
+	fmt.Println("WithTrx: Transaction Database found")
+	return &repository{db: trxHandle} // return new one
+}
+
+func (repo *repository) Begin() *gorm.DB {
+	return repo.db.Begin()
+}
+
+func (repo *repository) Commit() *gorm.DB {
+	return repo.db.Commit()
+}
+
+func (repo *repository) Rollback() *gorm.DB {
+	return repo.db.Rollback()
+}
+
 /******************************************************************************
  *                             Transaction Table                              *
  ******************************************************************************/

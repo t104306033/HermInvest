@@ -8,11 +8,44 @@ import (
 )
 
 type service struct {
-	repo repositorier
+	repo model.Repositorier
 }
 
-func NewService(repository repositorier) *service {
+func NewService(repository model.Repositorier) *service {
 	return &service{repo: repository}
+}
+
+func (serv *service) Test() {
+
+	tx := serv.repo.Begin()
+	txRepo := serv.repo.WithTrx(tx)
+
+	tr1 := model.NewTransactionRecord("2022-10-11", "08:02:00", "2330", 1, 3000, 25.4)
+	txRepo.InsertTransactionRecordSys(tr1)
+	// txRepo.Commit()
+	tr2 := model.NewTransactionRecord("2022-10-11", "08:03:00", "2330", 1, 3000, 25.4)
+	txRepo.InsertTransactionRecordSys(tr2)
+	txRepo.Rollback()
+	// txRepo.Tx.Commit()
+
+}
+
+func (serv *service) Test2() {
+
+	tr1 := model.NewTransactionRecord("2022-10-11", "08:04:00", "2330", 1, 3000, 25.4)
+	serv.repo.InsertTransactionRecordSys(tr1)
+	// serv.repo.DB.Commit()
+	tr2 := model.NewTransactionRecord("2022-10-11", "08:05:00", "2330", 1, 3000, 25.4)
+	serv.repo.InsertTransactionRecordSys(tr2)
+
+	// serv.repo.DB.Rollback()
+
+	// serv.repo.DB.Rollback()
+
+	// serv.repo.WithTrx(tx).DB.Rollback()
+
+	// tx.DB.Commit()
+
 }
 
 // addTransactionTailRecursion add new transaction records with tail recursion,
