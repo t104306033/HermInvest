@@ -20,7 +20,7 @@ func (repo *repository) WithTrx(trxHandle *gorm.DB) model.Repositorier {
 	// 	fmt.Println("WithTrx: Transaction Database not found")
 	// 	return repo
 	// }
-	fmt.Println("WithTrx: Transaction Database found")
+	// fmt.Println("WithTrx: Transaction Database found")
 	return &repository{db: trxHandle} // return new one
 }
 
