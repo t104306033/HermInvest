@@ -222,47 +222,24 @@ func (serv *service) RebuildCapitalReduction() error {
 			return err
 		}
 
-		remainingTrs := make([]*model.TransactionRecord, 0)
-		for _, tr := range trs {
-			if tr.TranType > 0 {
-				remainingTrs = append(remainingTrs, tr)
-			} else {
-				qty := tr.Quantity
-				for qty > 0 && len(remainingTrs) > 0 {
-					var remove *model.TransactionRecord
-					remove, remainingTrs = remainingTrs[0], remainingTrs[1:]
-					qty -= remove.Quantity
-				}
-			}
-		}
-
-		var totalQuantity int
-		var totalAmount int
-		for _, tr := range remainingTrs {
-			totalQuantity += tr.TranType * tr.Quantity
-			totalAmount += int(float64(tr.Quantity) * tr.UnitPrice)
-		}
-		var avgUnitPrice float64 = float64(totalAmount) / float64(totalQuantity)
-
-		// 3. insert into tblTransactionRecordSys
-		capitalReductionRecord := model.NewTransactionRecord(
-			cr.CapitalReductionDate, "08:00:00", cr.StockNo, -1, totalQuantity, avgUnitPrice)
-		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(capitalReductionRecord)
+		// FIFO
+		remainingTrs, err := model.CalcRemainingTransactionRecords(trs)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
 		}
 
-		newStockNo := cr.NewStockNo
-		if newStockNo == "" {
-			newStockNo = cr.StockNo
-		}
+		totalQuantity, avgUnitPrice := model.SumQuantityUnitPrice(remainingTrs)
 
-		newQuantity := int(float64(totalQuantity) * (1 - cr.Ratio))
-		newAvgUnitPrice := (avgUnitPrice - cr.Cash) / (1 - cr.Ratio)
-		newCapitalReductionRecord := model.NewTransactionRecord(
-			cr.DistributionDate, "08:00:10", newStockNo, 1, newQuantity, newAvgUnitPrice)
-		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(newCapitalReductionRecord)
+		// 3. insert into tblTransactionRecordSys
+		capitalReductionRecord, distributionRecord := cr.CalcTransactionRecords(totalQuantity, avgUnitPrice)
+
+		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(capitalReductionRecord)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(distributionRecord)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
