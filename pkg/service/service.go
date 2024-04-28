@@ -175,29 +175,6 @@ func (serv *service) UpdateTransaction(id int, t *model.Transaction) error {
 	return serv.repo.UpdateTransaction(id, t)
 }
 
-func (serv *service) DeleteAllTransactionRecordSys() error {
-	return serv.repo.DeleteAllTransactionRecordSys()
-}
-
-func (serv *service) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
-	return serv.repo.InsertTransactionRecordSys(tr)
-}
-
-func (serv *service) DeleteAlltblTransaction() error {
-	return serv.repo.DeleteAlltblTransaction()
-}
-
-func (serv *service) DeleteAlltblTransactionHistory() error {
-	return serv.repo.DeleteAlltblTransactionHistory()
-}
-
-func (serv *service) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
-	return serv.repo.QueryTransactionRecordUnion()
-}
-func (serv *service) CreateTransactions(ts []*model.Transaction) ([]int, error) {
-	return serv.repo.CreateTransactions(ts)
-}
-
 // ---
 
 func (serv *service) RebuildCapitalReduction() error {
