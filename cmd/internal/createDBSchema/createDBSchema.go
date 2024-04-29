@@ -145,5 +145,18 @@ func main() {
 	}
 	fmt.Println("Table tblTransactionHistory created successfully")
 
+	// Create vv_transactionInventory table
+	_, err = db.Exec(`
+		CREATE VIEW "vv_transactionInventory" AS 
+		select stockNo, tranType, sum(quantity), sum(totalAmount)/sum(quantity) as avgUnitPrice, sum(taxes) 
+		from tblTransaction
+		group by stockNo
+	`)
+	if err != nil {
+		fmt.Println("Error creating vv_transactionInventory table:", err)
+		return
+	}
+	fmt.Println("Table vv_transactionInventory created successfully")
+
 	fmt.Println("Database created successfully")
 }
