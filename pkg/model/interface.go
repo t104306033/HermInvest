@@ -13,6 +13,7 @@ type Repositorier interface {
 	DeleteAlltblTransaction() error
 	DeleteAlltblTransactionHistory() error
 	DeleteTransaction(id int) error
+	DeleteSQLiteSequence() error
 	DeleteTransactions(ids []int) error
 	FindEarliestTransactionByStockNo(stockNo string) (*Transaction, error)
 	InsertTransactionRecordSys(tr *TransactionRecord) error

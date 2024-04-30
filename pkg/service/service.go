@@ -244,7 +244,13 @@ func (serv *service) RebuildCapitalReduction() error {
 func (serv *service) RebuildTransaction() error {
 	tx := serv.repo.Begin()
 
-	err := serv.repo.WithTrx(tx).DeleteAlltblTransaction()
+	err := serv.repo.WithTrx(tx).DeleteSQLiteSequence()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return fmt.Errorf("failed to deleting SQLiteSequence: %v", err)
+	}
+
+	err = serv.repo.WithTrx(tx).DeleteAlltblTransaction()
 	if err != nil {
 		serv.repo.WithTrx(tx).Rollback()
 		return fmt.Errorf("failed to deleting tblTransaction: %v", err)

@@ -36,6 +36,8 @@ func (repo *repository) Rollback() *gorm.DB {
 	return repo.db.Rollback()
 }
 
+// echo "Transaction Table" | boxes -a c -s 80 -d cc
+
 /******************************************************************************
  *                             Transaction Table                              *
  ******************************************************************************/
@@ -181,6 +183,19 @@ func (repo *repository) CreateTransactionHistory(t *model.Transaction) (int, err
 // deleteAlltblTransactionHistory
 func (repo *repository) DeleteAlltblTransactionHistory() error {
 	if err := repo.db.Exec("DELETE FROM tblTransactionHistory").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/******************************************************************************
+ *                                   SQLite                                   *
+ ******************************************************************************/
+
+// deleteSQLiteSequence
+func (repo *repository) DeleteSQLiteSequence() error {
+	if err := repo.db.Exec("DELETE FROM sqlite_sequence").Error; err != nil {
 		return err
 	}
 
