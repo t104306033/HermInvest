@@ -147,10 +147,17 @@ func main() {
 
 	// Create vv_transactionInventory table
 	_, err = db.Exec(`
-		CREATE VIEW "vv_transactionInventory" AS 
-		select stockNo, tranType, sum(quantity), sum(totalAmount)/sum(quantity) as avgUnitPrice, sum(taxes) 
-		from tblTransaction
-		group by stockNo
+		CREATE VIEW "vvTransactionInventory" AS
+		SELECT 
+			stockNo, stockName, tranType, sum(quantity), 
+			sum(totalAmount)/sum(quantity) as avgUnitPrice, 
+			sum(totalAmount), sum(taxes)
+		FROM (
+			SELECT a.*, b.stockName
+			FROM tblTransaction	a
+			JOIN tblStockMapping b on a.stockNo = b.stockNo
+		)
+		GROUP by stockNo
 	`)
 	if err != nil {
 		fmt.Println("Error creating vv_transactionInventory table:", err)
