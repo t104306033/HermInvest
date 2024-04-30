@@ -15,6 +15,10 @@ func NewService(repository model.Repositorier) *service {
 	return &service{repo: repository}
 }
 
+func (serv *service) WithTrx(trxHandle *gorm.DB) *service {
+	return &service{repo: serv.repo.WithTrx(trxHandle)} // return new one
+}
+
 // addTransactionTailRecursion add new transaction records with tail recursion,
 // When adding, inventory and transaction history, especially write-offs and
 // tails, need to be considered.
@@ -149,8 +153,17 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 // It will add or update transactions in the inventory and add history.
 // Return the modified transaction record in the inventory
 func (serv *service) AddTransaction(newTransaction *model.Transaction) (*model.Transaction, error) {
+	tx := serv.repo.Begin()
+
 	remainingQuantity := newTransaction.Quantity
-	return serv.addTransactionTailRecursion(newTransaction, remainingQuantity)
+	ts, err := serv.WithTrx(tx).addTransactionTailRecursion(newTransaction, remainingQuantity)
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return nil, fmt.Errorf("failed to add transaction: %v", err)
+	}
+	serv.repo.WithTrx(tx).Commit()
+
+	return ts, nil
 }
 
 // ---
