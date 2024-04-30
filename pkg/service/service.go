@@ -242,25 +242,38 @@ func (serv *service) RebuildCapitalReduction() error {
 }
 
 func (serv *service) RebuildTransaction() error {
+	tx := serv.repo.Begin()
 
-	serv.repo.DeleteAlltblTransaction()
-	serv.repo.DeleteAlltblTransactionHistory()
+	err := serv.repo.WithTrx(tx).DeleteAlltblTransaction()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return fmt.Errorf("failed to deleting tblTransaction: %v", err)
+	}
 
-	trs, _ := serv.repo.QueryTransactionRecordUnion()
+	err = serv.repo.WithTrx(tx).DeleteAlltblTransactionHistory()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return fmt.Errorf("failed to deleting tblTransactionHistory: %v", err)
+	}
 
-	// var transactions []*model.Transaction
+	trs, err := serv.repo.WithTrx(tx).QueryTransactionRecordUnion()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return fmt.Errorf("failed to querying TransactionRecord: %v", err)
+	}
+
 	for _, tr := range trs {
 		newTransaction := model.NewTransactionFromInput(
 			tr.Date, tr.Time, tr.StockNo, tr.TranType, tr.Quantity, tr.UnitPrice)
-		_, err := serv.AddTransaction(newTransaction)
+		remainingQuantity := newTransaction.Quantity
+		_, err := serv.WithTrx(tx).addTransactionTailRecursion(newTransaction, remainingQuantity)
 		if err != nil {
-			fmt.Println("Error adding transaction: ", err)
+			serv.repo.WithTrx(tx).Rollback()
+			return fmt.Errorf("failed to adding transaction in tail recursion: %v", err)
 		}
-		// else if t != nil {
-		// 	transactions = append(transactions, t)
-		// }
 	}
-	// displayResults(transactions)
+
+	serv.repo.WithTrx(tx).Commit()
 
 	return nil
 }

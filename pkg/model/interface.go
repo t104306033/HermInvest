@@ -7,7 +7,7 @@ import (
 type Repositorier interface {
 	CreateTransaction(t *Transaction) (int, error)
 	CreateTransactionHistory(t *Transaction) (int, error)
-	CreateTransactionHistorys(ts []*Transaction) ([]int, error)
+	// CreateTransactionHistorys(ts []*Transaction) ([]int, error)
 	CreateTransactions(ts []*Transaction) ([]int, error)
 	DeleteAllTransactionRecordSys() error
 	DeleteAlltblTransaction() error

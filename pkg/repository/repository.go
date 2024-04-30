@@ -151,7 +151,11 @@ func (repo *repository) DeleteTransactions(ids []int) error {
 
 // CreateTransactionHistory: insert transaction and return inserted id
 func (repo *repository) CreateTransactionHistory(t *model.Transaction) (int, error) {
-	result := repo.db.Table("tblTransactionHistory").Create(&t)
+	// Create a new one and set ID to 0, let SQLite autoincrement
+	var transactionHistory model.Transaction = *t
+	transactionHistory.ID = 0
+
+	result := repo.db.Table("tblTransactionHistory").Create(&transactionHistory)
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -159,20 +163,20 @@ func (repo *repository) CreateTransactionHistory(t *model.Transaction) (int, err
 	return t.ID, nil
 }
 
-// CreateTransactionHistorys: insert transactions and return inserted ids
-func (repo *repository) CreateTransactionHistorys(ts []*model.Transaction) ([]int, error) {
-	result := repo.db.Table("tblTransactionHistory").Create(&ts)
-	if result.Error != nil {
-		return nil, result.Error
-	}
+// // CreateTransactionHistorys: insert transactions and return inserted ids
+// func (repo *repository) CreateTransactionHistorys(ts []*model.Transaction) ([]int, error) {
+// 	result := repo.db.Table("tblTransactionHistory").Create(&ts)
+// 	if result.Error != nil {
+// 		return nil, result.Error
+// 	}
 
-	var insertedIDs []int
-	for _, t := range ts {
-		insertedIDs = append(insertedIDs, t.ID)
-	}
+// 	var insertedIDs []int
+// 	for _, t := range ts {
+// 		insertedIDs = append(insertedIDs, t.ID)
+// 	}
 
-	return insertedIDs, nil
-}
+// 	return insertedIDs, nil
+// }
 
 // deleteAlltblTransactionHistory
 func (repo *repository) DeleteAlltblTransactionHistory() error {

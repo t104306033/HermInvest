@@ -2,6 +2,7 @@ package main
 
 import (
 	"HermInvest/pkg/service"
+	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -20,5 +21,8 @@ func controlRun(cmd *cobra.Command, args []string) {
 	serv := service.InitializeService()
 
 	// serv.RebuildCapitalReduction()
-	serv.RebuildTransaction()
+	err := serv.RebuildTransaction()
+	if err != nil {
+		fmt.Println("error:", err)
+	}
 }
