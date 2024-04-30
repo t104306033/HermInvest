@@ -45,7 +45,7 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 	earliestTransaction, err := serv.repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("error finding first purchase: %v", err)
+			return nil, fmt.Errorf("failed to finding first purchase: %v", err)
 		}
 		// Case A
 		earliestTransaction.TranType = newTransaction.TranType
@@ -57,7 +57,7 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 			newTransaction.SetQuantity(newTransaction.Quantity - remainingQuantity)
 			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(F), failed to creating transaction history: %v", err)
 			}
 			newTransaction.SetQuantity(remainingQuantity)
 		}
@@ -65,11 +65,11 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 		// Case B
 		id, err := serv.repo.CreateTransaction(newTransaction)
 		if err != nil {
-			return nil, fmt.Errorf("error creating transaction: %v", err)
+			return nil, fmt.Errorf("Case(B), failed to creating transaction: %v", err)
 		}
 		transaction, err := serv.repo.QueryTransactionByID(id)
 		if err != nil {
-			return nil, fmt.Errorf("error querying database: %v", err)
+			return nil, fmt.Errorf("Case(B), failed to querying transaction: %v", err)
 		}
 
 		return transaction, nil
@@ -87,18 +87,18 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 			stockHistoryAdd.SetQuantity(remainingQuantity)
 			_, err = serv.repo.CreateTransactionHistory(stockHistoryAdd)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(C), failed to creating transaction history: %v", err)
 			}
 			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(C), failed to creating transaction history: %v", err)
 			}
 
 			// Update stock inventory
 			earliestTransaction.SetQuantity(earliestTransaction.Quantity - remainingQuantity)
 			err := serv.repo.UpdateTransaction(earliestTransaction.ID, earliestTransaction)
 			if err != nil {
-				// handle update transaction failed
+				return nil, fmt.Errorf("Case(C), failed to updating transaction: %v", err)
 			}
 
 			return earliestTransaction, nil
@@ -108,16 +108,16 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 			// add transaction history
 			_, err = serv.repo.CreateTransactionHistory(earliestTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(D), failed to creating transaction history: %v", err)
 			}
 			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(D), failed to creating transaction history: %v", err)
 			}
 			// delete stock inventory
 			err = serv.repo.DeleteTransaction(earliestTransaction.ID)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(D), failed to deleting transaction: %v", err)
 			}
 
 			// Or use move
@@ -129,13 +129,13 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 			// add transaction history
 			_, err = serv.repo.CreateTransactionHistory(earliestTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(E), failed to creating transaction history: %v", err)
 			}
 
 			// delete stock inventory
 			err = serv.repo.DeleteTransaction(earliestTransaction.ID)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(E), failed to deleting transaction: %v", err)
 			}
 
 			remainingQuantity = remainingQuantity - earliestTransaction.Quantity
