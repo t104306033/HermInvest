@@ -21,7 +21,8 @@ func controlRun(cmd *cobra.Command, args []string) {
 	serv := service.InitializeService()
 
 	// serv.RebuildCapitalReduction()
-	err := serv.RebuildTransaction()
+	// err := serv.RebuildTransaction()
+	err := serv.RebuildDividend()
 	if err != nil {
 		fmt.Println("error:", err)
 	}

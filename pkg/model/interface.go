@@ -18,6 +18,7 @@ type Repositorier interface {
 	FindEarliestTransactionByStockNo(stockNo string) (*Transaction, error)
 	InsertTransactionRecordSys(tr *TransactionRecord) error
 	QueryCapitalReductionAll() ([]*CapitalReduction, error)
+	QueryDividendAll() ([]*ExDividend, error)
 	QueryTransactionAll() ([]*Transaction, error)
 	QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*Transaction, error)
 	QueryTransactionByID(id int) (*Transaction, error)

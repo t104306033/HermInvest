@@ -241,6 +241,25 @@ func (serv *service) RebuildCapitalReduction() error {
 
 }
 
+func (serv *service) RebuildDividend() error {
+	tx := serv.repo.Begin()
+
+	// 1. Query all transaction records from tblDividend
+	eds, err := serv.repo.WithTrx(tx).QueryDividendAll()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return err
+	}
+
+	for _, ed := range eds {
+		fmt.Println(ed)
+	}
+
+	serv.repo.WithTrx(tx).Commit()
+
+	return nil
+}
+
 func (serv *service) RebuildTransaction() error {
 	tx := serv.repo.Begin()
 

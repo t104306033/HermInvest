@@ -221,6 +221,16 @@ func (repo *repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, e
 	return capitalReductions, nil
 }
 
+// QueryCapitalReductionAll
+func (repo *repository) QueryDividendAll() ([]*model.ExDividend, error) {
+	var exDividends []*model.ExDividend
+	if err := repo.db.Table("tblDividend").Find(&exDividends).Error; err != nil {
+		return nil, err
+	}
+
+	return exDividends, nil
+}
+
 /******************************************************************************
  *                          Transaction Record Table                          *
  ******************************************************************************/
