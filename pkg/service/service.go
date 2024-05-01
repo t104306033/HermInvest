@@ -253,6 +253,32 @@ func (serv *service) RebuildDividend() error {
 
 	for _, ed := range eds {
 		fmt.Println(ed)
+
+		// You should use TransactionRecordUnion, here is a happy case
+		trs, err := serv.repo.WithTrx(tx).QueryTransactionRecordByStockNo(ed.StockNo, ed.ExDividendDate)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+
+		// FIFO
+		remainingTrs, err := model.CalcRemainingTransactionRecords(trs)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+
+		totalQuantity, _ := model.SumQuantityUnitPrice(remainingTrs)
+		fmt.Println(totalQuantity)
+
+		// 3. insert into tblTransactionRecordSys
+		distributionRecord := ed.CalcTransactionRecords(totalQuantity)
+
+		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(distributionRecord)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
 	}
 
 	serv.repo.WithTrx(tx).Commit()
