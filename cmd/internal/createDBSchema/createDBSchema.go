@@ -184,5 +184,24 @@ func main() {
 	}
 	fmt.Println("Table vv_transactionInventory created successfully")
 
+	// Create vvTransactionCash table
+	_, err = db.Exec(`
+		CREATE VIEW "vvTransactionCash" AS 
+		SELECT 
+			YQ, stockNo, stockName, distributionDate, 
+			cashDividend, quantity, totalAmount
+		FROM (
+			SELECT a.*, b.stockName
+			FROM tblTransactionCash	a
+			JOIN tblStockMapping b on a.stockNo = b.stockNo
+		)
+		ORDER BY stockNo, distributionDate
+	`)
+	if err != nil {
+		fmt.Println("Error creating vvTransactionCash table:", err)
+		return
+	}
+	fmt.Println("Table vvTransactionCash created successfully")
+
 	fmt.Println("Database created successfully")
 }
