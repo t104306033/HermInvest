@@ -12,16 +12,19 @@ type Repositorier interface {
 	DeleteAllTransactionRecordSys() error
 	DeleteAlltblTransaction() error
 	DeleteAlltblTransactionHistory() error
+	DeleteAllCashDividendRecord() error
 	DeleteTransaction(id int) error
 	DeleteSQLiteSequence() error
 	DeleteTransactions(ids []int) error
 	FindEarliestTransactionByStockNo(stockNo string) (*Transaction, error)
 	InsertTransactionRecordSys(tr *TransactionRecord) error
+	InsertCashDividendRecord(cd *ExDividend) error
 	QueryCapitalReductionAll() ([]*CapitalReduction, error)
 	QueryDividendAll() ([]*ExDividend, error)
 	QueryTransactionAll() ([]*Transaction, error)
 	QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*Transaction, error)
 	QueryTransactionByID(id int) (*Transaction, error)
+	QueryTransactionRecordAll() ([]*TransactionRecord, error)
 	QueryTransactionRecordByStockNo(stockNo string, date string) ([]*TransactionRecord, error)
 	QueryTransactionRecordUnion() ([]*TransactionRecord, error)
 	QueryUnionNote()

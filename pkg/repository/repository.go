@@ -244,6 +244,24 @@ func (repo *repository) InsertTransactionRecordSys(tr *model.TransactionRecord) 
 	return nil
 }
 
+// InsertCashDividendRecord
+func (repo *repository) InsertCashDividendRecord(cd *model.ExDividend) error {
+	if err := repo.db.Table("tblTransactionCash").Create(cd).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// InsertCashDividendRecord
+func (repo *repository) DeleteAllCashDividendRecord() error {
+	if err := repo.db.Exec("DELETE FROM tblTransactionCash").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // QueryTransactionRecordByStockNo
 func (repo *repository) QueryTransactionRecordByStockNo(stockNo string, date string) ([]*model.TransactionRecord, error) {
 	var transactionRecords []*model.TransactionRecord
@@ -255,6 +273,18 @@ func (repo *repository) QueryTransactionRecordByStockNo(stockNo string, date str
 	// for _, cr := range transactionRecords {
 	// 	fmt.Println(cr)
 	// }
+
+	return transactionRecords, nil
+}
+
+// QueryTransactionRecordUnion
+func (repo *repository) QueryTransactionRecordAll() ([]*model.TransactionRecord, error) {
+	var transactionRecords []*model.TransactionRecord
+	err := repo.db.Table("tblTransactionRecord").Find(&transactionRecords).Error
+
+	if err != nil {
+		return nil, nil
+	}
 
 	return transactionRecords, nil
 }
