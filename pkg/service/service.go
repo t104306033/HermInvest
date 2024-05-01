@@ -3,6 +3,8 @@ package service
 import (
 	"HermInvest/pkg/model"
 	"fmt"
+	"sort"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -252,8 +254,6 @@ func (serv *service) RebuildDividend() error {
 	}
 
 	for _, ed := range eds {
-		fmt.Println(ed)
-
 		// You should use TransactionRecordUnion, here is a happy case
 		trs, err := serv.repo.WithTrx(tx).QueryTransactionRecordByStockNo(ed.StockNo, ed.ExDividendDate)
 		if err != nil {
@@ -269,9 +269,7 @@ func (serv *service) RebuildDividend() error {
 		}
 
 		totalQuantity, _ := model.SumQuantityUnitPrice(remainingTrs)
-		fmt.Println(totalQuantity)
 
-		// 3. insert into tblTransactionRecordSys
 		distributionRecord := ed.CalcTransactionRecords(totalQuantity)
 
 		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(distributionRecord)
@@ -279,6 +277,125 @@ func (serv *service) RebuildDividend() error {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
 		}
+	}
+
+	serv.repo.WithTrx(tx).Commit()
+
+	return nil
+}
+
+type DividendOrReduction struct {
+	Date   string
+	Source string
+	Obj    interface{}
+}
+
+func mergeAndSort(exDividends []*model.ExDividend, capitalReductions []*model.CapitalReduction) []*DividendOrReduction {
+	var mergedList []*DividendOrReduction
+
+	for _, exDividend := range exDividends {
+		mergedList = append(mergedList, &DividendOrReduction{Date: exDividend.ExDividendDate, Source: "Dividend", Obj: exDividend})
+	}
+
+	for _, capitalReduction := range capitalReductions {
+		mergedList = append(mergedList, &DividendOrReduction{Date: capitalReduction.CapitalReductionDate, Source: "Reduction", Obj: capitalReduction})
+	}
+
+	sort.Slice(mergedList, func(i, j int) bool {
+		date1, _ := time.Parse("2006-01-02", mergedList[i].Date)
+		date2, _ := time.Parse("2006-01-02", mergedList[j].Date)
+		return date1.Before(date2)
+	})
+
+	return mergedList
+}
+
+func (serv *service) RebuildTransactionRecordSys() error {
+	tx := serv.repo.Begin()
+
+	eds, err := serv.repo.QueryDividendAll()
+	if err != nil {
+		return err
+	}
+
+	crs, err := serv.repo.QueryCapitalReductionAll()
+	if err != nil {
+		return err
+	}
+
+	trs, err := serv.repo.QueryTransactionRecordAll()
+	if err != nil {
+		return err
+	}
+
+	err = serv.repo.WithTrx(tx).DeleteAllCashDividendRecord()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return err
+	}
+
+	mergedList := mergeAndSort(eds, crs)
+
+	var newTrs []*model.TransactionRecord = trs
+	for _, o := range mergedList {
+		if o.Source == "Reduction" {
+
+			cr := o.Obj.(*model.CapitalReduction)
+			var filteredRecords []*model.TransactionRecord
+			for _, record := range newTrs {
+				rdate, _ := time.Parse("2006-01-02", record.Date)
+				crdate, _ := time.Parse("2006-01-02", cr.CapitalReductionDate)
+				if cr.StockNo == record.StockNo && crdate.After(rdate) {
+					filteredRecords = append(filteredRecords, record)
+				}
+			}
+
+			remainingTrs, err := model.CalcRemainingTransactionRecords(filteredRecords)
+			if err != nil {
+				return err
+			}
+
+			totalQuantity, avgUnitPrice := model.SumQuantityUnitPrice(remainingTrs)
+
+			capitalReductionRecord, distributionRecord := cr.CalcTransactionRecords(totalQuantity, avgUnitPrice)
+
+			newTrs = append(newTrs, capitalReductionRecord, distributionRecord)
+
+		} else if o.Source == "Dividend" {
+			ed := o.Obj.(*model.ExDividend)
+			var filteredRecords []*model.TransactionRecord
+			for _, record := range newTrs {
+				rdate, _ := time.Parse("2006-01-02", record.Date)
+				crdate, _ := time.Parse("2006-01-02", ed.ExDividendDate)
+				if ed.StockNo == record.StockNo && crdate.After(rdate) {
+					filteredRecords = append(filteredRecords, record)
+				}
+			}
+
+			remainingTrs, err := model.CalcRemainingTransactionRecords(filteredRecords)
+			if err != nil {
+				return err
+			}
+
+			totalQuantity, _ := model.SumQuantityUnitPrice(remainingTrs)
+
+			// TODO: need to calc stock dividend record and append to newTrs
+			cd := ed.CalcCashDividendRecord(totalQuantity)
+
+			err = serv.repo.WithTrx(tx).InsertCashDividendRecord(cd)
+			if err != nil {
+				serv.repo.WithTrx(tx).Rollback()
+				return err
+			}
+
+		}
+
+		sort.Slice(newTrs, func(i, j int) bool {
+			date1, _ := time.Parse("2006-01-02", newTrs[i].Date)
+			date2, _ := time.Parse("2006-01-02", newTrs[j].Date)
+			return date1.Before(date2)
+		})
+
 	}
 
 	serv.repo.WithTrx(tx).Commit()
