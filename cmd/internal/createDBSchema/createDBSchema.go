@@ -89,18 +89,21 @@ func main() {
 	}
 	fmt.Println("Table tblDividend created successfully")
 
-	// Create tblCashDividend table
+	// Create tblTransactionCash table
 	_, err = db.Exec(`
-		CREATE TABLE IF NOT EXISTS "tblCashDividend" (
-			"date"	TEXT NOT NULL,
+		CREATE TABLE IF NOT EXISTS "tblTransactionCash" (
+			"YQ" TEXT NOT NULL,
 			"stockNo"	TEXT NOT NULL,
+			"exDividendDate"	TEXT NOT NULL,
+			"distributionDate"	TEXT NOT NULL,
+			"cashDividend"	REAL NOT NULL,
+			"stockDividend"	REAL,
 			"quantity"	INTEGER NOT NULL,
-			"unitPrice"	REAL NOT NULL,
 			"totalAmount"	INTEGER NOT NULL
 		)
 	`)
 	if err != nil {
-		fmt.Println("Error creating tblCashDividend table:", err)
+		fmt.Println("Error creating tblTransactionCash table:", err)
 		return
 	}
 	fmt.Println("Table tblCashDividend created successfully")
