@@ -1,5 +1,7 @@
 package model
 
+import "fmt"
+
 // Transaction represents a record of a share transaction.
 type TransactionRecord struct {
 	Date      string  `gorm:"column:date"`
@@ -20,6 +22,37 @@ func NewTransactionRecord(date, time, stockNo string, tranType, quantity int, un
 		Quantity:  quantity,
 		UnitPrice: unitPrice,
 	}
+}
+
+func SumQuantityUnitPrice(remainingTrs []*TransactionRecord) (int, float64) {
+	var totalQuantity, totalAmount int
+	for _, tr := range remainingTrs {
+		totalQuantity += tr.Quantity
+		totalAmount += int(float64(tr.Quantity) * tr.UnitPrice)
+	}
+	avgUnitPrice := float64(totalAmount) / float64(totalQuantity)
+	return totalQuantity, avgUnitPrice
+}
+
+func CalcRemainingTransactionRecords(trs []*TransactionRecord) ([]*TransactionRecord, error) {
+	var remainingTrs []*TransactionRecord
+	for _, tr := range trs {
+		if tr.TranType > 0 {
+			remainingTrs = append(remainingTrs, tr)
+		} else {
+			qty := tr.Quantity
+			for qty > 0 && len(remainingTrs) > 0 {
+				var remove *TransactionRecord
+				remove, remainingTrs = remainingTrs[0], remainingTrs[1:]
+				qty -= remove.Quantity
+				if qty < 0 {
+					return nil, fmt.Errorf("error qty < 0")
+
+				}
+			}
+		}
+	}
+	return remainingTrs, nil
 }
 
 // Transaction represents a share transaction.

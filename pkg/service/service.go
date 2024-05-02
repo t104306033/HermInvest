@@ -3,16 +3,22 @@ package service
 import (
 	"HermInvest/pkg/model"
 	"fmt"
+	"sort"
+	"time"
 
 	"gorm.io/gorm"
 )
 
 type service struct {
-	repo repositorier
+	repo model.Repositorier
 }
 
-func NewService(repository repositorier) *service {
+func NewService(repository model.Repositorier) *service {
 	return &service{repo: repository}
+}
+
+func (serv *service) WithTrx(trxHandle *gorm.DB) *service {
+	return &service{repo: serv.repo.WithTrx(trxHandle)} // return new one
 }
 
 // addTransactionTailRecursion add new transaction records with tail recursion,
@@ -45,7 +51,7 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 	earliestTransaction, err := serv.repo.FindEarliestTransactionByStockNo(newTransaction.StockNo)
 	if err != nil {
 		if err != gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("error finding first purchase: %v", err)
+			return nil, fmt.Errorf("failed to finding first purchase: %v", err)
 		}
 		// Case A
 		earliestTransaction.TranType = newTransaction.TranType
@@ -57,7 +63,7 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 			newTransaction.SetQuantity(newTransaction.Quantity - remainingQuantity)
 			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(F), failed to creating transaction history: %v", err)
 			}
 			newTransaction.SetQuantity(remainingQuantity)
 		}
@@ -65,11 +71,11 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 		// Case B
 		id, err := serv.repo.CreateTransaction(newTransaction)
 		if err != nil {
-			return nil, fmt.Errorf("error creating transaction: %v", err)
+			return nil, fmt.Errorf("Case(B), failed to creating transaction: %v", err)
 		}
 		transaction, err := serv.repo.QueryTransactionByID(id)
 		if err != nil {
-			return nil, fmt.Errorf("error querying database: %v", err)
+			return nil, fmt.Errorf("Case(B), failed to querying transaction: %v", err)
 		}
 
 		return transaction, nil
@@ -87,18 +93,18 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 			stockHistoryAdd.SetQuantity(remainingQuantity)
 			_, err = serv.repo.CreateTransactionHistory(stockHistoryAdd)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(C), failed to creating transaction history: %v", err)
 			}
 			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(C), failed to creating transaction history: %v", err)
 			}
 
 			// Update stock inventory
 			earliestTransaction.SetQuantity(earliestTransaction.Quantity - remainingQuantity)
 			err := serv.repo.UpdateTransaction(earliestTransaction.ID, earliestTransaction)
 			if err != nil {
-				// handle update transaction failed
+				return nil, fmt.Errorf("Case(C), failed to updating transaction: %v", err)
 			}
 
 			return earliestTransaction, nil
@@ -108,16 +114,16 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 			// add transaction history
 			_, err = serv.repo.CreateTransactionHistory(earliestTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(D), failed to creating transaction history: %v", err)
 			}
 			_, err = serv.repo.CreateTransactionHistory(newTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(D), failed to creating transaction history: %v", err)
 			}
 			// delete stock inventory
 			err = serv.repo.DeleteTransaction(earliestTransaction.ID)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(D), failed to deleting transaction: %v", err)
 			}
 
 			// Or use move
@@ -129,13 +135,13 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 			// add transaction history
 			_, err = serv.repo.CreateTransactionHistory(earliestTransaction)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(E), failed to creating transaction history: %v", err)
 			}
 
 			// delete stock inventory
 			err = serv.repo.DeleteTransaction(earliestTransaction.ID)
 			if err != nil {
-				// handle create transaction history failed
+				return nil, fmt.Errorf("Case(E), failed to deleting transaction: %v", err)
 			}
 
 			remainingQuantity = remainingQuantity - earliestTransaction.Quantity
@@ -149,8 +155,17 @@ func (serv *service) addTransactionTailRecursion(newTransaction *model.Transacti
 // It will add or update transactions in the inventory and add history.
 // Return the modified transaction record in the inventory
 func (serv *service) AddTransaction(newTransaction *model.Transaction) (*model.Transaction, error) {
+	tx := serv.repo.Begin()
+
 	remainingQuantity := newTransaction.Quantity
-	return serv.addTransactionTailRecursion(newTransaction, remainingQuantity)
+	ts, err := serv.WithTrx(tx).addTransactionTailRecursion(newTransaction, remainingQuantity)
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return nil, fmt.Errorf("failed to add transaction: %v", err)
+	}
+	serv.repo.WithTrx(tx).Commit()
+
+	return ts, nil
 }
 
 // ---
@@ -175,33 +190,273 @@ func (serv *service) UpdateTransaction(id int, t *model.Transaction) error {
 	return serv.repo.UpdateTransaction(id, t)
 }
 
-func (serv *service) DeleteAllTransactionRecordSys() error {
-	return serv.repo.DeleteAllTransactionRecordSys()
+// ---
+
+func (serv *service) RebuildCapitalReduction() error {
+
+	tx := serv.repo.Begin()
+
+	serv.repo.WithTrx(tx).DeleteAllTransactionRecordSys()
+
+	// 1. Query all transaction records from tblCapitalReduction
+	crs, err := serv.repo.WithTrx(tx).QueryCapitalReductionAll()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return err
+	}
+
+	// 2. Iterate over each capital reduction record
+	for _, cr := range crs {
+		// Query transaction records by stock number
+		trs, err := serv.repo.WithTrx(tx).QueryTransactionRecordByStockNo(cr.StockNo, cr.CapitalReductionDate)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+
+		// FIFO
+		remainingTrs, err := model.CalcRemainingTransactionRecords(trs)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+
+		totalQuantity, avgUnitPrice := model.SumQuantityUnitPrice(remainingTrs)
+
+		// 3. insert into tblTransactionRecordSys
+		capitalReductionRecord, distributionRecord := cr.CalcTransactionRecords(totalQuantity, avgUnitPrice)
+
+		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(capitalReductionRecord)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(distributionRecord)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+	}
+
+	serv.repo.WithTrx(tx).Commit()
+	return nil
+
 }
 
-func (serv *service) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
-	return serv.repo.QueryCapitalReductionAll()
+func (serv *service) RebuildDividend() error {
+	tx := serv.repo.Begin()
+
+	// 1. Query all transaction records from tblDividend
+	eds, err := serv.repo.WithTrx(tx).QueryDividendAll()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return err
+	}
+
+	for _, ed := range eds {
+		// You should use TransactionRecordUnion, here is a happy case
+		trs, err := serv.repo.WithTrx(tx).QueryTransactionRecordByStockNo(ed.StockNo, ed.ExDividendDate)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+
+		// FIFO
+		remainingTrs, err := model.CalcRemainingTransactionRecords(trs)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+
+		totalQuantity, _ := model.SumQuantityUnitPrice(remainingTrs)
+
+		distributionRecord := ed.CalcTransactionRecords(totalQuantity)
+
+		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(distributionRecord)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+	}
+
+	serv.repo.WithTrx(tx).Commit()
+
+	return nil
 }
 
-func (serv *service) QueryTransactionRecordByStockNo(stockNo string, date string) ([]*model.TransactionRecord, error) {
-	return serv.repo.QueryTransactionRecordByStockNo(stockNo, date)
+type DividendOrReduction struct {
+	Date string
+	Obj  interface{}
 }
 
-func (serv *service) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
-	return serv.repo.InsertTransactionRecordSys(tr)
+func mergeAndSort(exDividends []*model.ExDividend, capitalReductions []*model.CapitalReduction) []*DividendOrReduction {
+	var mergedList []*DividendOrReduction
+
+	for _, exDividend := range exDividends {
+		mergedList = append(mergedList, &DividendOrReduction{Date: exDividend.ExDividendDate, Obj: exDividend})
+	}
+
+	for _, capitalReduction := range capitalReductions {
+		mergedList = append(mergedList, &DividendOrReduction{Date: capitalReduction.CapitalReductionDate, Obj: capitalReduction})
+	}
+
+	sort.Slice(mergedList, func(i, j int) bool {
+		date1, _ := time.Parse("2006-01-02", mergedList[i].Date)
+		date2, _ := time.Parse("2006-01-02", mergedList[j].Date)
+		return date1.Before(date2)
+	})
+
+	return mergedList
 }
 
-func (serv *service) DeleteAlltblTransaction() error {
-	return serv.repo.DeleteAlltblTransaction()
+func (serv *service) RebuildTransactionRecordSys() error {
+
+	eds, err := serv.repo.QueryDividendAll()
+	if err != nil {
+		return err
+	}
+
+	crs, err := serv.repo.QueryCapitalReductionAll()
+	if err != nil {
+		return err
+	}
+
+	trs, err := serv.repo.QueryTransactionRecordAll()
+	if err != nil {
+		return err
+	}
+
+	mergedList := mergeAndSort(eds, crs)
+
+	var cashDividends []*model.ExDividend
+	for _, o := range mergedList {
+		var filteredRecords []*model.TransactionRecord
+
+		switch obj := o.Obj.(type) {
+		case *model.CapitalReduction:
+			cr := obj
+			for _, record := range trs {
+				rdate, _ := time.Parse("2006-01-02", record.Date)
+				crdate, _ := time.Parse("2006-01-02", cr.CapitalReductionDate)
+				if cr.StockNo == record.StockNo && crdate.After(rdate) {
+					filteredRecords = append(filteredRecords, record)
+				}
+			}
+
+			remainingTrs, err := model.CalcRemainingTransactionRecords(filteredRecords)
+			if err != nil {
+				return err
+			}
+
+			totalQuantity, avgUnitPrice := model.SumQuantityUnitPrice(remainingTrs)
+
+			capitalReductionRecord, distributionRecord := cr.CalcTransactionRecords(totalQuantity, avgUnitPrice)
+
+			trs = append(trs, capitalReductionRecord, distributionRecord)
+		case *model.ExDividend:
+			ed := obj
+			for _, record := range trs {
+				rdate, _ := time.Parse("2006-01-02", record.Date)
+				crdate, _ := time.Parse("2006-01-02", ed.ExDividendDate)
+				if ed.StockNo == record.StockNo && crdate.After(rdate) {
+					filteredRecords = append(filteredRecords, record)
+				}
+			}
+
+			remainingTrs, err := model.CalcRemainingTransactionRecords(filteredRecords)
+			if err != nil {
+				return err
+			}
+
+			totalQuantity, _ := model.SumQuantityUnitPrice(remainingTrs)
+
+			// TODO: need to calc stock dividend record and append to newTrs
+			cd := ed.CalcCashDividendRecord(totalQuantity)
+
+			cashDividends = append(cashDividends, cd)
+		}
+
+		sort.Slice(trs, func(i, j int) bool {
+			date1, _ := time.Parse("2006-01-02", trs[i].Date)
+			date2, _ := time.Parse("2006-01-02", trs[j].Date)
+			return date1.Before(date2)
+		})
+	}
+
+	tx := serv.repo.Begin()
+
+	err = serv.repo.WithTrx(tx).DeleteAllCashDividendRecord()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return err
+	}
+
+	for _, cd := range cashDividends {
+		err = serv.repo.WithTrx(tx).InsertCashDividendRecord(cd)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+	}
+
+	err = serv.repo.WithTrx(tx).DeleteAllTransactionRecordSys()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return err
+	}
+
+	for _, tr := range trs {
+		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(tr)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+	}
+
+	serv.repo.WithTrx(tx).Commit()
+
+	return nil
 }
 
-func (serv *service) DeleteAlltblTransactionHistory() error {
-	return serv.repo.DeleteAlltblTransactionHistory()
-}
+func (serv *service) RebuildTransaction() error {
+	tx := serv.repo.Begin()
 
-func (serv *service) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
-	return serv.repo.QueryTransactionRecordUnion()
-}
-func (serv *service) CreateTransactions(ts []*model.Transaction) ([]int, error) {
-	return serv.repo.CreateTransactions(ts)
+	err := serv.repo.WithTrx(tx).DeleteSQLiteSequence()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return fmt.Errorf("failed to deleting SQLiteSequence: %v", err)
+	}
+
+	err = serv.repo.WithTrx(tx).DeleteAlltblTransaction()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return fmt.Errorf("failed to deleting tblTransaction: %v", err)
+	}
+
+	err = serv.repo.WithTrx(tx).DeleteAlltblTransactionHistory()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return fmt.Errorf("failed to deleting tblTransactionHistory: %v", err)
+	}
+
+	trs, err := serv.repo.WithTrx(tx).QueryTransactionRecordSysAll()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return fmt.Errorf("failed to querying TransactionRecord: %v", err)
+	}
+
+	for _, tr := range trs {
+		newTransaction := model.NewTransactionFromInput(
+			tr.Date, tr.Time, tr.StockNo, tr.TranType, tr.Quantity, tr.UnitPrice)
+		remainingQuantity := newTransaction.Quantity
+		_, err := serv.WithTrx(tx).addTransactionTailRecursion(newTransaction, remainingQuantity)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return fmt.Errorf("failed to adding transaction in tail recursion: %v", err)
+		}
+	}
+
+	serv.repo.WithTrx(tx).Commit()
+
+	return nil
 }

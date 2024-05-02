@@ -25,7 +25,8 @@ func GetDBConnection() *gorm.DB {
 	// Reference: https://gorm.io/docs/logger.html
 	// GORM defined log levels: Silent (default), Error, Warn, Info.
 	gormConfig := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger: logger.Default.LogMode(logger.Silent),
+		// Logger: logger.Default.LogMode(logger.Info),
 	}
 
 	db, err := gorm.Open(sqlite.Open(dbPath), gormConfig)

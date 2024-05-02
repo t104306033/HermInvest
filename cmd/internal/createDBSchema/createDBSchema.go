@@ -89,6 +89,25 @@ func main() {
 	}
 	fmt.Println("Table tblDividend created successfully")
 
+	// Create tblTransactionCash table
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS "tblTransactionCash" (
+			"YQ" TEXT NOT NULL,
+			"stockNo"	TEXT NOT NULL,
+			"exDividendDate"	TEXT NOT NULL,
+			"distributionDate"	TEXT NOT NULL,
+			"cashDividend"	REAL NOT NULL,
+			"stockDividend"	REAL,
+			"quantity"	INTEGER NOT NULL,
+			"totalAmount"	INTEGER NOT NULL
+		)
+	`)
+	if err != nil {
+		fmt.Println("Error creating tblTransactionCash table:", err)
+		return
+	}
+	fmt.Println("Table tblCashDividend created successfully")
+
 	// Create tblStockMapping table
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS tblStockMapping (
@@ -144,6 +163,45 @@ func main() {
 		return
 	}
 	fmt.Println("Table tblTransactionHistory created successfully")
+
+	// Create vv_transactionInventory table
+	_, err = db.Exec(`
+		CREATE VIEW "vvTransactionInventory" AS
+		SELECT 
+			stockNo, stockName, tranType, sum(quantity), 
+			sum(totalAmount)/sum(quantity) as avgUnitPrice, 
+			sum(totalAmount), sum(taxes)
+		FROM (
+			SELECT a.*, b.stockName
+			FROM tblTransaction	a
+			JOIN tblStockMapping b on a.stockNo = b.stockNo
+		)
+		GROUP by stockNo
+	`)
+	if err != nil {
+		fmt.Println("Error creating vv_transactionInventory table:", err)
+		return
+	}
+	fmt.Println("Table vv_transactionInventory created successfully")
+
+	// Create vvTransactionCash table
+	_, err = db.Exec(`
+		CREATE VIEW "vvTransactionCash" AS 
+		SELECT 
+			YQ, stockNo, stockName, distributionDate, 
+			cashDividend, quantity, totalAmount
+		FROM (
+			SELECT a.*, b.stockName
+			FROM tblTransactionCash	a
+			JOIN tblStockMapping b on a.stockNo = b.stockNo
+		)
+		ORDER BY stockNo, distributionDate
+	`)
+	if err != nil {
+		fmt.Println("Error creating vvTransactionCash table:", err)
+		return
+	}
+	fmt.Println("Table vvTransactionCash created successfully")
 
 	fmt.Println("Database created successfully")
 }

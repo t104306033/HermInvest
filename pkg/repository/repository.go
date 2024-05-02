@@ -15,6 +15,29 @@ func NewRepository(db *gorm.DB) *repository {
 	return &repository{db: db}
 }
 
+func (repo *repository) WithTrx(trxHandle *gorm.DB) model.Repositorier {
+	// if trxHandle == nil {
+	// 	fmt.Println("WithTrx: Transaction Database not found")
+	// 	return repo
+	// }
+	// fmt.Println("WithTrx: Transaction Database found")
+	return &repository{db: trxHandle} // return new one
+}
+
+func (repo *repository) Begin() *gorm.DB {
+	return repo.db.Begin()
+}
+
+func (repo *repository) Commit() *gorm.DB {
+	return repo.db.Commit()
+}
+
+func (repo *repository) Rollback() *gorm.DB {
+	return repo.db.Rollback()
+}
+
+// echo "Transaction Table" | boxes -a c -s 80 -d cc
+
 /******************************************************************************
  *                             Transaction Table                              *
  ******************************************************************************/
@@ -130,7 +153,11 @@ func (repo *repository) DeleteTransactions(ids []int) error {
 
 // CreateTransactionHistory: insert transaction and return inserted id
 func (repo *repository) CreateTransactionHistory(t *model.Transaction) (int, error) {
-	result := repo.db.Table("tblTransactionHistory").Create(&t)
+	// Create a new one and set ID to 0, let SQLite autoincrement
+	var transactionHistory model.Transaction = *t
+	transactionHistory.ID = 0
+
+	result := repo.db.Table("tblTransactionHistory").Create(&transactionHistory)
 	if result.Error != nil {
 		return 0, result.Error
 	}
@@ -138,24 +165,37 @@ func (repo *repository) CreateTransactionHistory(t *model.Transaction) (int, err
 	return t.ID, nil
 }
 
-// CreateTransactionHistorys: insert transactions and return inserted ids
-func (repo *repository) CreateTransactionHistorys(ts []*model.Transaction) ([]int, error) {
-	result := repo.db.Table("tblTransactionHistory").Create(&ts)
-	if result.Error != nil {
-		return nil, result.Error
-	}
+// // CreateTransactionHistorys: insert transactions and return inserted ids
+// func (repo *repository) CreateTransactionHistorys(ts []*model.Transaction) ([]int, error) {
+// 	result := repo.db.Table("tblTransactionHistory").Create(&ts)
+// 	if result.Error != nil {
+// 		return nil, result.Error
+// 	}
 
-	var insertedIDs []int
-	for _, t := range ts {
-		insertedIDs = append(insertedIDs, t.ID)
-	}
+// 	var insertedIDs []int
+// 	for _, t := range ts {
+// 		insertedIDs = append(insertedIDs, t.ID)
+// 	}
 
-	return insertedIDs, nil
-}
+// 	return insertedIDs, nil
+// }
 
 // deleteAlltblTransactionHistory
 func (repo *repository) DeleteAlltblTransactionHistory() error {
 	if err := repo.db.Exec("DELETE FROM tblTransactionHistory").Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/******************************************************************************
+ *                                   SQLite                                   *
+ ******************************************************************************/
+
+// deleteSQLiteSequence
+func (repo *repository) DeleteSQLiteSequence() error {
+	if err := repo.db.Exec("DELETE FROM sqlite_sequence").Error; err != nil {
 		return err
 	}
 
@@ -181,6 +221,16 @@ func (repo *repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, e
 	return capitalReductions, nil
 }
 
+// QueryCapitalReductionAll
+func (repo *repository) QueryDividendAll() ([]*model.ExDividend, error) {
+	var exDividends []*model.ExDividend
+	if err := repo.db.Table("tblDividend").Find(&exDividends).Error; err != nil {
+		return nil, err
+	}
+
+	return exDividends, nil
+}
+
 /******************************************************************************
  *                          Transaction Record Table                          *
  ******************************************************************************/
@@ -188,6 +238,24 @@ func (repo *repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, e
 // insertTransactionRecordSys
 func (repo *repository) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
 	if err := repo.db.Table("tblTransactionRecordSys").Create(tr).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// InsertCashDividendRecord
+func (repo *repository) InsertCashDividendRecord(cd *model.ExDividend) error {
+	if err := repo.db.Table("tblTransactionCash").Create(cd).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// InsertCashDividendRecord
+func (repo *repository) DeleteAllCashDividendRecord() error {
+	if err := repo.db.Exec("DELETE FROM tblTransactionCash").Error; err != nil {
 		return err
 	}
 
@@ -210,6 +278,18 @@ func (repo *repository) QueryTransactionRecordByStockNo(stockNo string, date str
 }
 
 // QueryTransactionRecordUnion
+func (repo *repository) QueryTransactionRecordAll() ([]*model.TransactionRecord, error) {
+	var transactionRecords []*model.TransactionRecord
+	err := repo.db.Table("tblTransactionRecord").Find(&transactionRecords).Error
+
+	if err != nil {
+		return nil, nil
+	}
+
+	return transactionRecords, nil
+}
+
+// QueryTransactionRecordUnion
 func (repo *repository) QueryTransactionRecordUnion() ([]*model.TransactionRecord, error) {
 	// SQLite seems to help you sort items by primary key when you query via UNION keyword.
 	// Or you can add ORDER keyword in the last line to sort it.
@@ -219,6 +299,18 @@ func (repo *repository) QueryTransactionRecordUnion() ([]*model.TransactionRecor
 	FROM tblTransactionRecord
 	UNION SELECT * FROM tblTransactionRecordSys
 	`).Scan(&transactionRecords).Error
+
+	if err != nil {
+		return nil, nil
+	}
+
+	return transactionRecords, nil
+}
+
+// QueryTransactionRecordSys
+func (repo *repository) QueryTransactionRecordSysAll() ([]*model.TransactionRecord, error) {
+	var transactionRecords []*model.TransactionRecord
+	err := repo.db.Table("tblTransactionRecordSys").Find(&transactionRecords).Error
 
 	if err != nil {
 		return nil, nil
