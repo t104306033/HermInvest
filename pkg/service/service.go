@@ -285,20 +285,19 @@ func (serv *service) RebuildDividend() error {
 }
 
 type DividendOrReduction struct {
-	Date   string
-	Source string
-	Obj    interface{}
+	Date string
+	Obj  interface{}
 }
 
 func mergeAndSort(exDividends []*model.ExDividend, capitalReductions []*model.CapitalReduction) []*DividendOrReduction {
 	var mergedList []*DividendOrReduction
 
 	for _, exDividend := range exDividends {
-		mergedList = append(mergedList, &DividendOrReduction{Date: exDividend.ExDividendDate, Source: "Dividend", Obj: exDividend})
+		mergedList = append(mergedList, &DividendOrReduction{Date: exDividend.ExDividendDate, Obj: exDividend})
 	}
 
 	for _, capitalReduction := range capitalReductions {
-		mergedList = append(mergedList, &DividendOrReduction{Date: capitalReduction.CapitalReductionDate, Source: "Reduction", Obj: capitalReduction})
+		mergedList = append(mergedList, &DividendOrReduction{Date: capitalReduction.CapitalReductionDate, Obj: capitalReduction})
 	}
 
 	sort.Slice(mergedList, func(i, j int) bool {
@@ -329,14 +328,15 @@ func (serv *service) RebuildTransactionRecordSys() error {
 
 	mergedList := mergeAndSort(eds, crs)
 
-	var newTrs []*model.TransactionRecord = trs
-	var cds []*model.ExDividend
+	var transactions []*model.TransactionRecord = trs
+	var cashDividends []*model.ExDividend
 	for _, o := range mergedList {
-		if o.Source == "Reduction" {
+		var filteredRecords []*model.TransactionRecord
 
-			cr := o.Obj.(*model.CapitalReduction)
-			var filteredRecords []*model.TransactionRecord
-			for _, record := range newTrs {
+		switch obj := o.Obj.(type) {
+		case *model.CapitalReduction:
+			cr := obj
+			for _, record := range transactions {
 				rdate, _ := time.Parse("2006-01-02", record.Date)
 				crdate, _ := time.Parse("2006-01-02", cr.CapitalReductionDate)
 				if cr.StockNo == record.StockNo && crdate.After(rdate) {
@@ -353,12 +353,10 @@ func (serv *service) RebuildTransactionRecordSys() error {
 
 			capitalReductionRecord, distributionRecord := cr.CalcTransactionRecords(totalQuantity, avgUnitPrice)
 
-			newTrs = append(newTrs, capitalReductionRecord, distributionRecord)
-
-		} else if o.Source == "Dividend" {
-			ed := o.Obj.(*model.ExDividend)
-			var filteredRecords []*model.TransactionRecord
-			for _, record := range newTrs {
+			transactions = append(transactions, capitalReductionRecord, distributionRecord)
+		case *model.ExDividend:
+			ed := obj
+			for _, record := range transactions {
 				rdate, _ := time.Parse("2006-01-02", record.Date)
 				crdate, _ := time.Parse("2006-01-02", ed.ExDividendDate)
 				if ed.StockNo == record.StockNo && crdate.After(rdate) {
@@ -376,13 +374,12 @@ func (serv *service) RebuildTransactionRecordSys() error {
 			// TODO: need to calc stock dividend record and append to newTrs
 			cd := ed.CalcCashDividendRecord(totalQuantity)
 
-			cds = append(cds, cd)
-
+			cashDividends = append(cashDividends, cd)
 		}
 
-		sort.Slice(newTrs, func(i, j int) bool {
-			date1, _ := time.Parse("2006-01-02", newTrs[i].Date)
-			date2, _ := time.Parse("2006-01-02", newTrs[j].Date)
+		sort.Slice(transactions, func(i, j int) bool {
+			date1, _ := time.Parse("2006-01-02", transactions[i].Date)
+			date2, _ := time.Parse("2006-01-02", transactions[j].Date)
 			return date1.Before(date2)
 		})
 
@@ -396,7 +393,7 @@ func (serv *service) RebuildTransactionRecordSys() error {
 		return err
 	}
 
-	for _, cd := range cds {
+	for _, cd := range cashDividends {
 		err = serv.repo.WithTrx(tx).InsertCashDividendRecord(cd)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
