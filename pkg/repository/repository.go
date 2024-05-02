@@ -307,6 +307,18 @@ func (repo *repository) QueryTransactionRecordUnion() ([]*model.TransactionRecor
 	return transactionRecords, nil
 }
 
+// QueryTransactionRecordSys
+func (repo *repository) QueryTransactionRecordSysAll() ([]*model.TransactionRecord, error) {
+	var transactionRecords []*model.TransactionRecord
+	err := repo.db.Table("tblTransactionRecordSys").Find(&transactionRecords).Error
+
+	if err != nil {
+		return nil, nil
+	}
+
+	return transactionRecords, nil
+}
+
 // deleteAllTransactionRecordSys
 func (repo *repository) DeleteAllTransactionRecordSys() error {
 	if err := repo.db.Exec("DELETE FROM tblTransactionRecordSys").Error; err != nil {

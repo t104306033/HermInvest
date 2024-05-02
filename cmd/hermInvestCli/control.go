@@ -20,9 +20,8 @@ func controlRun(cmd *cobra.Command, args []string) {
 	// capitalReductionTransactionGenerator()
 	serv := service.InitializeService()
 
-	// serv.RebuildCapitalReduction()
-	err := serv.RebuildTransactionRecordSys()
-	// err := serv.RebuildDividend()
+	// err := serv.RebuildTransactionRecordSys()
+	err := serv.RebuildTransaction()
 	if err != nil {
 		fmt.Println("error:", err)
 	}

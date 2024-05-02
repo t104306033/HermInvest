@@ -22,6 +22,7 @@ type Repositorier interface {
 	QueryCapitalReductionAll() ([]*CapitalReduction, error)
 	QueryDividendAll() ([]*ExDividend, error)
 	QueryTransactionAll() ([]*Transaction, error)
+	QueryTransactionRecordSysAll() ([]*TransactionRecord, error)
 	QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*Transaction, error)
 	QueryTransactionByID(id int) (*Transaction, error)
 	QueryTransactionRecordAll() ([]*TransactionRecord, error)

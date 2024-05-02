@@ -328,7 +328,6 @@ func (serv *service) RebuildTransactionRecordSys() error {
 
 	mergedList := mergeAndSort(eds, crs)
 
-	var transactions []*model.TransactionRecord = trs
 	var cashDividends []*model.ExDividend
 	for _, o := range mergedList {
 		var filteredRecords []*model.TransactionRecord
@@ -336,7 +335,7 @@ func (serv *service) RebuildTransactionRecordSys() error {
 		switch obj := o.Obj.(type) {
 		case *model.CapitalReduction:
 			cr := obj
-			for _, record := range transactions {
+			for _, record := range trs {
 				rdate, _ := time.Parse("2006-01-02", record.Date)
 				crdate, _ := time.Parse("2006-01-02", cr.CapitalReductionDate)
 				if cr.StockNo == record.StockNo && crdate.After(rdate) {
@@ -353,10 +352,10 @@ func (serv *service) RebuildTransactionRecordSys() error {
 
 			capitalReductionRecord, distributionRecord := cr.CalcTransactionRecords(totalQuantity, avgUnitPrice)
 
-			transactions = append(transactions, capitalReductionRecord, distributionRecord)
+			trs = append(trs, capitalReductionRecord, distributionRecord)
 		case *model.ExDividend:
 			ed := obj
-			for _, record := range transactions {
+			for _, record := range trs {
 				rdate, _ := time.Parse("2006-01-02", record.Date)
 				crdate, _ := time.Parse("2006-01-02", ed.ExDividendDate)
 				if ed.StockNo == record.StockNo && crdate.After(rdate) {
@@ -377,12 +376,11 @@ func (serv *service) RebuildTransactionRecordSys() error {
 			cashDividends = append(cashDividends, cd)
 		}
 
-		sort.Slice(transactions, func(i, j int) bool {
-			date1, _ := time.Parse("2006-01-02", transactions[i].Date)
-			date2, _ := time.Parse("2006-01-02", transactions[j].Date)
+		sort.Slice(trs, func(i, j int) bool {
+			date1, _ := time.Parse("2006-01-02", trs[i].Date)
+			date2, _ := time.Parse("2006-01-02", trs[j].Date)
 			return date1.Before(date2)
 		})
-
 	}
 
 	tx := serv.repo.Begin()
@@ -395,6 +393,20 @@ func (serv *service) RebuildTransactionRecordSys() error {
 
 	for _, cd := range cashDividends {
 		err = serv.repo.WithTrx(tx).InsertCashDividendRecord(cd)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
+	}
+
+	err = serv.repo.WithTrx(tx).DeleteAllTransactionRecordSys()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return err
+	}
+
+	for _, tr := range trs {
+		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(tr)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
@@ -427,7 +439,7 @@ func (serv *service) RebuildTransaction() error {
 		return fmt.Errorf("failed to deleting tblTransactionHistory: %v", err)
 	}
 
-	trs, err := serv.repo.WithTrx(tx).QueryTransactionRecordUnion()
+	trs, err := serv.repo.WithTrx(tx).QueryTransactionRecordSysAll()
 	if err != nil {
 		serv.repo.WithTrx(tx).Rollback()
 		return fmt.Errorf("failed to querying TransactionRecord: %v", err)
