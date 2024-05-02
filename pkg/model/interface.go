@@ -7,14 +7,8 @@ import (
 type Repositorier interface {
 	CreateTransaction(t *Transaction) (int, error)
 	CreateTransactionHistory(t *Transaction) (int, error)
-	// CreateTransactionHistorys(ts []*Transaction) ([]int, error)
 	CreateTransactions(ts []*Transaction) ([]int, error)
-	// DeleteAllTransactionRecordSys() error
-	// DeleteAlltblTransaction() error
-	// DeleteAlltblTransactionHistory() error
-	// DeleteAllCashDividendRecord() error
 	DeleteTransaction(id int) error
-	// DeleteSQLiteSequence() error
 	DeleteTransactions(ids []int) error
 	FindEarliestTransactionByStockNo(stockNo string) (*Transaction, error)
 	InsertTransactionRecordSys(tr *TransactionRecord) error
@@ -34,7 +28,6 @@ type Repositorier interface {
 	Begin() *gorm.DB
 	Commit() *gorm.DB
 	Rollback() *gorm.DB
-
 	// tablename: "sqlite_sequence", "tblTransaction", "tblTransactionHistory", "tblTransactionCash", "tblTransactionRecordSys"
 	DropTable(tablename string) error
 }

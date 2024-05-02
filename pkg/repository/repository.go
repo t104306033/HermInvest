@@ -16,11 +16,6 @@ func NewRepository(db *gorm.DB) *repository {
 }
 
 func (repo *repository) WithTrx(trxHandle *gorm.DB) model.Repositorier {
-	// if trxHandle == nil {
-	// 	fmt.Println("WithTrx: Transaction Database not found")
-	// 	return repo
-	// }
-	// fmt.Println("WithTrx: Transaction Database found")
 	return &repository{db: trxHandle} // return new one
 }
 
@@ -201,14 +196,9 @@ func (repo *repository) DropTable(tablename string) error {
 // QueryCapitalReductionAll
 func (repo *repository) QueryCapitalReductionAll() ([]*model.CapitalReduction, error) {
 	var capitalReductions []*model.CapitalReduction
-	// 使用 Gorm 框架的 Find 方法來執行查詢
 	if err := repo.db.Table("tblCapitalReduction").Find(&capitalReductions).Error; err != nil {
 		return nil, err
 	}
-
-	// for _, cr := range capitalReductions {
-	// 	fmt.Println(cr)
-	// }
 
 	return capitalReductions, nil
 }
@@ -252,10 +242,6 @@ func (repo *repository) QueryTransactionRecordByStockNo(stockNo string, date str
 	if err != nil {
 		return nil, err
 	}
-
-	// for _, cr := range transactionRecords {
-	// 	fmt.Println(cr)
-	// }
 
 	return transactionRecords, nil
 }
