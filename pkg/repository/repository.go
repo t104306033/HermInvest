@@ -128,15 +128,6 @@ func (repo *repository) UpdateTransaction(id int, t *model.Transaction) error {
 	return nil
 }
 
-// deleteAlltblTransaction
-func (repo *repository) DeleteAlltblTransaction() error {
-	if err := repo.db.Exec("DELETE FROM tblTransaction").Error; err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (repo *repository) DeleteTransaction(id int) error {
 	result := repo.db.Table("tblTransaction").Delete(&model.Transaction{ID: id})
 	return result.Error
@@ -165,37 +156,38 @@ func (repo *repository) CreateTransactionHistory(t *model.Transaction) (int, err
 	return t.ID, nil
 }
 
-// // CreateTransactionHistorys: insert transactions and return inserted ids
-// func (repo *repository) CreateTransactionHistorys(ts []*model.Transaction) ([]int, error) {
-// 	result := repo.db.Table("tblTransactionHistory").Create(&ts)
-// 	if result.Error != nil {
-// 		return nil, result.Error
-// 	}
-
-// 	var insertedIDs []int
-// 	for _, t := range ts {
-// 		insertedIDs = append(insertedIDs, t.ID)
-// 	}
-
-// 	return insertedIDs, nil
-// }
-
-// deleteAlltblTransactionHistory
-func (repo *repository) DeleteAlltblTransactionHistory() error {
-	if err := repo.db.Exec("DELETE FROM tblTransactionHistory").Error; err != nil {
-		return err
-	}
-
-	return nil
-}
-
 /******************************************************************************
- *                                   SQLite                                   *
+ *                                   Common                                   *
  ******************************************************************************/
 
-// deleteSQLiteSequence
-func (repo *repository) DeleteSQLiteSequence() error {
-	if err := repo.db.Exec("DELETE FROM sqlite_sequence").Error; err != nil {
+// DropTable
+func (repo *repository) DropTable(tablename string) error {
+	// Define a whitelist of tables that are allowed to be deleted
+	allowedDroppedTables := []string{
+		"sqlite_sequence",
+		"tblTransaction",
+		"tblTransactionHistory",
+		"tblTransactionCash",
+		"tblTransactionRecordSys",
+	}
+
+	// Check if the tablename is in the whitelist
+	found := false
+	for _, allowedTable := range allowedDroppedTables {
+		if allowedTable == tablename {
+			found = true
+			break
+		}
+	}
+
+	// If the tablename is not in the whitelist, return an error
+	if !found {
+		return fmt.Errorf("can't drop table '%s': Table not allowed", tablename)
+	}
+
+	// Proceed with dropping the table if it's in the whitelist
+	err := repo.db.Exec(fmt.Sprintf("DELETE FROM %s", tablename)).Error
+	if err != nil {
 		return err
 	}
 
@@ -247,15 +239,6 @@ func (repo *repository) InsertTransactionRecordSys(tr *model.TransactionRecord) 
 // InsertCashDividendRecord
 func (repo *repository) InsertCashDividendRecord(cd *model.ExDividend) error {
 	if err := repo.db.Table("tblTransactionCash").Create(cd).Error; err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// InsertCashDividendRecord
-func (repo *repository) DeleteAllCashDividendRecord() error {
-	if err := repo.db.Exec("DELETE FROM tblTransactionCash").Error; err != nil {
 		return err
 	}
 
@@ -317,15 +300,6 @@ func (repo *repository) QueryTransactionRecordSysAll() ([]*model.TransactionReco
 	}
 
 	return transactionRecords, nil
-}
-
-// deleteAllTransactionRecordSys
-func (repo *repository) DeleteAllTransactionRecordSys() error {
-	if err := repo.db.Exec("DELETE FROM tblTransactionRecordSys").Error; err != nil {
-		return err
-	}
-
-	return nil
 }
 
 /******************************************************************************

@@ -196,7 +196,7 @@ func (serv *service) RebuildCapitalReduction() error {
 
 	tx := serv.repo.Begin()
 
-	serv.repo.WithTrx(tx).DeleteAllTransactionRecordSys()
+	serv.repo.WithTrx(tx).DropTable("tblTransactionRecordSys")
 
 	// 1. Query all transaction records from tblCapitalReduction
 	crs, err := serv.repo.WithTrx(tx).QueryCapitalReductionAll()
@@ -385,7 +385,7 @@ func (serv *service) RebuildTransactionRecordSys() error {
 
 	tx := serv.repo.Begin()
 
-	err = serv.repo.WithTrx(tx).DeleteAllCashDividendRecord()
+	err = serv.repo.WithTrx(tx).DropTable("tblTransactionCash")
 	if err != nil {
 		serv.repo.WithTrx(tx).Rollback()
 		return err
@@ -399,7 +399,7 @@ func (serv *service) RebuildTransactionRecordSys() error {
 		}
 	}
 
-	err = serv.repo.WithTrx(tx).DeleteAllTransactionRecordSys()
+	err = serv.repo.WithTrx(tx).DropTable("tblTransactionRecordSys")
 	if err != nil {
 		serv.repo.WithTrx(tx).Rollback()
 		return err
@@ -421,19 +421,19 @@ func (serv *service) RebuildTransactionRecordSys() error {
 func (serv *service) RebuildTransaction() error {
 	tx := serv.repo.Begin()
 
-	err := serv.repo.WithTrx(tx).DeleteSQLiteSequence()
+	err := serv.repo.WithTrx(tx).DropTable("sqlite_sequence")
 	if err != nil {
 		serv.repo.WithTrx(tx).Rollback()
 		return fmt.Errorf("failed to deleting SQLiteSequence: %v", err)
 	}
 
-	err = serv.repo.WithTrx(tx).DeleteAlltblTransaction()
+	err = serv.repo.WithTrx(tx).DropTable("tblTransaction")
 	if err != nil {
 		serv.repo.WithTrx(tx).Rollback()
 		return fmt.Errorf("failed to deleting tblTransaction: %v", err)
 	}
 
-	err = serv.repo.WithTrx(tx).DeleteAlltblTransactionHistory()
+	err = serv.repo.WithTrx(tx).DropTable("tblTransactionHistory")
 	if err != nil {
 		serv.repo.WithTrx(tx).Rollback()
 		return fmt.Errorf("failed to deleting tblTransactionHistory: %v", err)
