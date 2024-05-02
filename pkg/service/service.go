@@ -311,7 +311,6 @@ func mergeAndSort(exDividends []*model.ExDividend, capitalReductions []*model.Ca
 }
 
 func (serv *service) RebuildTransactionRecordSys() error {
-	tx := serv.repo.Begin()
 
 	eds, err := serv.repo.QueryDividendAll()
 	if err != nil {
@@ -328,15 +327,10 @@ func (serv *service) RebuildTransactionRecordSys() error {
 		return err
 	}
 
-	err = serv.repo.WithTrx(tx).DeleteAllCashDividendRecord()
-	if err != nil {
-		serv.repo.WithTrx(tx).Rollback()
-		return err
-	}
-
 	mergedList := mergeAndSort(eds, crs)
 
 	var newTrs []*model.TransactionRecord = trs
+	var cds []*model.ExDividend
 	for _, o := range mergedList {
 		if o.Source == "Reduction" {
 
@@ -382,11 +376,7 @@ func (serv *service) RebuildTransactionRecordSys() error {
 			// TODO: need to calc stock dividend record and append to newTrs
 			cd := ed.CalcCashDividendRecord(totalQuantity)
 
-			err = serv.repo.WithTrx(tx).InsertCashDividendRecord(cd)
-			if err != nil {
-				serv.repo.WithTrx(tx).Rollback()
-				return err
-			}
+			cds = append(cds, cd)
 
 		}
 
@@ -396,6 +386,22 @@ func (serv *service) RebuildTransactionRecordSys() error {
 			return date1.Before(date2)
 		})
 
+	}
+
+	tx := serv.repo.Begin()
+
+	err = serv.repo.WithTrx(tx).DeleteAllCashDividendRecord()
+	if err != nil {
+		serv.repo.WithTrx(tx).Rollback()
+		return err
+	}
+
+	for _, cd := range cds {
+		err = serv.repo.WithTrx(tx).InsertCashDividendRecord(cd)
+		if err != nil {
+			serv.repo.WithTrx(tx).Rollback()
+			return err
+		}
 	}
 
 	serv.repo.WithTrx(tx).Commit()
