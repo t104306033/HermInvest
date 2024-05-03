@@ -217,8 +217,8 @@ func (repo *repository) QueryDividendAll() ([]*model.ExDividend, error) {
  *                          Transaction Record Table                          *
  ******************************************************************************/
 
-// insertTransactionRecordSys
-func (repo *repository) InsertTransactionRecordSys(tr *model.TransactionRecord) error {
+// CreateTransactionRecordSys
+func (repo *repository) CreateTransactionRecordSys(tr *model.TransactionRecord) error {
 	if err := repo.db.Table("tblTransactionRecordSys").Create(tr).Error; err != nil {
 		return err
 	}
@@ -226,8 +226,8 @@ func (repo *repository) InsertTransactionRecordSys(tr *model.TransactionRecord) 
 	return nil
 }
 
-// InsertCashDividendRecord
-func (repo *repository) InsertCashDividendRecord(cd *model.ExDividend) error {
+// CreateCashDividendRecord
+func (repo *repository) CreateCashDividendRecord(cd *model.ExDividend) error {
 	if err := repo.db.Table("tblTransactionCash").Create(cd).Error; err != nil {
 		return err
 	}

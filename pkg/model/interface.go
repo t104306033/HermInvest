@@ -8,11 +8,10 @@ type Repositorier interface {
 	CreateTransaction(t *Transaction) (int, error)
 	CreateTransactionHistory(t *Transaction) (int, error)
 	CreateTransactions(ts []*Transaction) ([]int, error)
-	DeleteTransaction(id int) error
-	DeleteTransactions(ids []int) error
+	CreateTransactionRecordSys(tr *TransactionRecord) error
+	CreateCashDividendRecord(cd *ExDividend) error
+
 	FindEarliestTransactionByStockNo(stockNo string) (*Transaction, error)
-	InsertTransactionRecordSys(tr *TransactionRecord) error
-	InsertCashDividendRecord(cd *ExDividend) error
 	QueryCapitalReductionAll() ([]*CapitalReduction, error)
 	QueryDividendAll() ([]*ExDividend, error)
 	QueryTransactionAll() ([]*Transaction, error)
@@ -21,13 +20,20 @@ type Repositorier interface {
 	QueryTransactionByID(id int) (*Transaction, error)
 	QueryTransactionRecordAll() ([]*TransactionRecord, error)
 	QueryTransactionRecordByStockNo(stockNo string, date string) ([]*TransactionRecord, error)
-	QueryTransactionRecordUnion() ([]*TransactionRecord, error)
-	QueryUnionNote()
+
 	UpdateTransaction(id int, t *Transaction) error
+
+	DeleteTransaction(id int) error
+	DeleteTransactions(ids []int) error
+
+	DropTable(tablename string) error
+
+	gormRepositorier
+}
+
+type gormRepositorier interface {
 	WithTrx(trxHandle *gorm.DB) Repositorier
 	Begin() *gorm.DB
 	Commit() *gorm.DB
 	Rollback() *gorm.DB
-	// tablename: "sqlite_sequence", "tblTransaction", "tblTransactionHistory", "tblTransactionCash", "tblTransactionRecordSys"
-	DropTable(tablename string) error
 }

@@ -226,12 +226,12 @@ func (serv *service) RebuildCapitalReduction() error {
 		// 3. insert into tblTransactionRecordSys
 		capitalReductionRecord, distributionRecord := cr.CalcTransactionRecords(totalQuantity, avgUnitPrice)
 
-		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(capitalReductionRecord)
+		err = serv.repo.WithTrx(tx).CreateTransactionRecordSys(capitalReductionRecord)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
 		}
-		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(distributionRecord)
+		err = serv.repo.WithTrx(tx).CreateTransactionRecordSys(distributionRecord)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
@@ -272,7 +272,7 @@ func (serv *service) RebuildDividend() error {
 
 		distributionRecord := ed.CalcTransactionRecords(totalQuantity)
 
-		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(distributionRecord)
+		err = serv.repo.WithTrx(tx).CreateTransactionRecordSys(distributionRecord)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
@@ -392,7 +392,7 @@ func (serv *service) RebuildTransactionRecordSys() error {
 	}
 
 	for _, cd := range cashDividends {
-		err = serv.repo.WithTrx(tx).InsertCashDividendRecord(cd)
+		err = serv.repo.WithTrx(tx).CreateCashDividendRecord(cd)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
@@ -406,7 +406,7 @@ func (serv *service) RebuildTransactionRecordSys() error {
 	}
 
 	for _, tr := range trs {
-		err = serv.repo.WithTrx(tx).InsertTransactionRecordSys(tr)
+		err = serv.repo.WithTrx(tx).CreateTransactionRecordSys(tr)
 		if err != nil {
 			serv.repo.WithTrx(tx).Rollback()
 			return err
