@@ -114,6 +114,24 @@ func (repo *repository) QueryTransactionByDetails(stockNo string, tranType int, 
 	return transactions, nil
 }
 
+// QueryTransactionInventory
+func (repo *repository) QueryTransactionInventory() ([]*model.Transaction, error) {
+	var transactions []*model.Transaction
+
+	selectColumns := `stockNo, 
+	sum(quantity) AS quantity, 
+	sum(totalAmount)/sum(quantity) AS unitPrice, 
+	sum(totalAmount) AS totalAmount, 
+	sum(taxes) AS taxes`
+
+	err := repo.db.Preload("StockMapping").
+		Select(selectColumns).Group("stockNo").Find(&transactions).Error
+	if err != nil {
+		return nil, err
+	}
+	return transactions, nil
+}
+
 // updateTransaction
 func (repo *repository) UpdateTransaction(id int, t *model.Transaction) error {
 	err := repo.db.Updates(t).Error

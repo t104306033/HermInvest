@@ -1,7 +1,7 @@
 package main
 
 import (
-	"HermInvest/pkg/service"
+	"HermInvest/pkg/repository"
 	"fmt"
 	"log"
 	"net/http"
@@ -52,11 +52,14 @@ func apiGetTransactions(c *gin.Context) {
 	// 	{ID: 1, StockNo: "ABC", TranType: 1, Quantity: 100, UnitPrice: 10.50, TotalAmount: 1050, Taxes: 50},
 	// 	{ID: 2, StockNo: "XYZ", TranType: 2, Quantity: 50, UnitPrice: 20.25, TotalAmount: 1012, Taxes: 12},
 	// }
-	serv := service.InitializeService()
+	db := repository.GetDBConnection()
 
-	transactions, err := serv.QueryTransactionAll()
+	// init transactionRepository
+	repo := repository.NewRepository(db)
+
+	transactions, err := repo.QueryTransactionInventory()
 	if err != nil {
-		fmt.Println("Error querying database:", err)
+		fmt.Println("err: ", err)
 	}
 
 	c.JSON(http.StatusOK, transactions)
