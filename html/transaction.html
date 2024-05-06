@@ -10,9 +10,14 @@
         <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
             .bootstrap-table.bootstrap4 {
-                max-width: 1000px;
+                width: 800px;
+            }
+
+            .container {
+                display: inline-flex;
             }
         </style>
     </head>
@@ -25,24 +30,59 @@
         </ul>
         <h1>Transaction</h1>
         <p>Track stock inventory.</p>
-        <!-- Bootstrap Table -->
-        <table data-toggle="table" data-url="/api/transaction" data-pagination="true" data-search="true">
-            <thead>
-                <tr>
-                    <th data-field="StockNo">Stock No</th>
-                    <th data-field="StockMapping.StockName">Stock Name</th>
-                    <th data-field="Quantity">Qty(shares)</th>
-                    <th data-field="UnitPrice" data-formatter="formatUnitPrice">Unit Price</th>
-                    <th data-field="TotalAmount">Total Amount</th>
-                    <th data-field="Taxes">Taxes</th>
-                </tr>
-            </thead>
-        </table>
+        <div class="container">
+            <!-- Bootstrap Table -->
+            <table data-toggle="table" data-url="/api/transaction" data-pagination="true" data-search="true">
+                <thead>
+                    <tr>
+                        <th data-field="StockNo">Stock No</th>
+                        <th data-field="StockMapping.StockName">Stock Name</th>
+                        <th data-field="Quantity">Qty(shares)</th>
+                        <th data-field="UnitPrice" data-formatter="formatUnitPrice">Unit Price</th>
+                        <th data-field="TotalAmount">Total Amount</th>
+                        <th data-field="Taxes">Taxes</th>
+                    </tr>
+                </thead>
+            </table>
+            <!-- Chart.js  -->
+            <canvas id="pieChart" width="400" height="400"></canvas>
+        </div>
 
         <script>
             function formatUnitPrice(value) {
                 return parseFloat(value).toFixed(2);
             }
+        </script>
+        <script>
+            $.ajax({
+                url: '/api/transaction',
+                method: 'GET',
+                success: function(data) {
+                    var labels = [];
+                    var dataValues = [];
+                    data.forEach(function(item) {
+                        labels.push(item.StockMapping.StockName);
+                        dataValues.push(item.TotalAmount);
+                    });
+    
+                    var ctx = document.getElementById('pieChart').getContext('2d');
+                    var pieChart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: dataValues,
+                            }]
+                        },
+                        options: {
+                            responsive: false, // 防止图表自适应大小
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching data:', error);
+                }
+            });
         </script>
     </body>
 </html>
