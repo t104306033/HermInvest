@@ -28,6 +28,7 @@ func webRun(cmd *cobra.Command, args []string) {
 	router.GET("/", homePage)
 	router.GET("/transaction", transactionPage)
 	router.GET("/api/transaction", apiGetTransactions)
+	router.Static("/assets", "./assets")
 
 	open("http://127.0.0.1:9453/transaction")
 
