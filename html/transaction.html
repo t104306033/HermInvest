@@ -4,11 +4,11 @@
 <html>
     <head>
         <meta charset="UTF-8" />
-        <title>HermInvest</title>  
+        <title>HermInvest</title>
         <!-- import jQuery, Bootstrap Table, ChartJS -->
         <script src="assets/jquery-3.5.1.js"></script>
-        <link rel="stylesheet" href="assets/bootstrap-4.5.2.css">
-        <link rel="stylesheet" href="assets/bootstrap-table-1.18.2.css">
+        <link rel="stylesheet" href="assets/bootstrap-4.5.2.css" />
+        <link rel="stylesheet" href="assets/bootstrap-table-1.18.2.css" />
         <script src="assets/bootstrap-table-1.18.2.js"></script>
         <script src="assets/chart.umd-4.4.2.js"></script>
         <style>
@@ -32,7 +32,7 @@
         <p>Track stock inventory.</p>
         <div class="container">
             <!-- Bootstrap Table -->
-            <table data-toggle="table" data-url="/api/transaction" data-query-params="" data-pagination="true" data-search="true">
+            <table data-toggle="table" data-pagination="true" data-search="true">
                 <thead>
                     <tr>
                         <th data-field="StockNo">Stock No</th>
@@ -54,35 +54,45 @@
             }
         </script>
         <script>
-            $.ajax({
-                url: '/api/transaction',
-                method: 'GET',
-                success: function(data) {
-                    var labels = [];
-                    var dataValues = [];
-                    data.forEach(function(item) {
-                        labels.push(item.StockMapping.StockName);
-                        dataValues.push(item.TotalAmount);
-                    });
-    
-                    var ctx = document.getElementById('pieChart').getContext('2d');
-                    var pieChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                data: dataValues,
-                            }]
-                        },
-                        options: {
-                            responsive: false, // 防止图表自适应大小
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error fetching data:', error);
-                }
-            });
+            fetch("/api/transaction")
+                .then(function (res) {
+                    return res.json();
+                })
+                .then(function (data) {
+                    updateTable(data);
+                    updateCanvas(data);
+                })
+                .catch(function (err) {
+                    console.error("Error fetching data:", err);
+                });
+
+            function updateTable(data) {
+                $("table").bootstrapTable("load", data);
+            }
+
+            function updateCanvas(data) {
+                var labels = [];
+                var dataValues = [];
+                data.forEach(function (item) {
+                    labels.push(item.StockMapping.StockName);
+                    dataValues.push(item.TotalAmount);
+                });
+                var datasets = {
+                    data: dataValues,
+                };
+
+                var ctx = document.getElementById("pieChart").getContext("2d");
+                var pieChart = new Chart(ctx, {
+                    type: "doughnut",
+                    data: {
+                        labels: labels,
+                        datasets: [datasets],
+                    },
+                    options: {
+                        responsive: false,
+                    },
+                });
+            }
         </script>
     </body>
 </html>
