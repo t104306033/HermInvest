@@ -67,10 +67,30 @@
             function updateCanvas(data) {
                 var labels = [];
                 var dataValues = [];
-                data.forEach(function (item) {
-                    labels.push(item.StockMapping.StockName);
-                    dataValues.push(item.TotalAmount);
+                var otherTotalAmount = 0;
+
+                // Sort data by TotalAmount in descending order
+                data.sort(function (a, b) {
+                    return b.TotalAmount - a.TotalAmount;
                 });
+
+                // Push top 5 stocks to labels and dataValues arrays
+                for (var i = 0; i < Math.min(5, data.length); i++) {
+                    labels.push(data[i].StockMapping.StockName);
+                    dataValues.push(data[i].TotalAmount);
+                }
+
+                // Calculate total amount of other stocks
+                for (var j = 5; j < data.length; j++) {
+                    otherTotalAmount += data[j].TotalAmount;
+                }
+
+                // Push "Other" category if there are more than 5 stocks
+                if (data.length > 5) {
+                    labels.push("Other");
+                    dataValues.push(otherTotalAmount);
+                }
+
                 var datasets = {
                     data: dataValues,
                 };
