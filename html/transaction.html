@@ -32,7 +32,13 @@
         <p>Track stock inventory.</p>
         <div class="container">
             <!-- Bootstrap Table -->
-            <table data-toggle="table" data-pagination="true" data-search="true">
+            <table
+                data-toggle="table"
+                data-pagination="true"
+                data-search="true"
+                data-sort-name="TotalAmount"
+                data-sort-order="desc"
+            >
                 <thead>
                     <tr>
                         <th data-field="StockMapping.StockName" data-formatter="stockNameFormatter">Stock Name</th>
