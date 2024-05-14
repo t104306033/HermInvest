@@ -51,6 +51,8 @@
             </table>
             <!-- Chart.js  -->
             <canvas id="pieChart" width="400" height="400"></canvas>
+
+            <canvas id="chart-area" />
         </div>
 
         <script>
@@ -110,6 +112,19 @@
                     },
                     options: {
                         responsive: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        var currentValue = context.raw,
+                                            total = context.chart._metasets[context.datasetIndex].total,
+                                            percentage = parseFloat(((currentValue / total) * 100).toFixed(1));
+
+                                        return `${context.formattedValue} NTD (${percentage}%)`;
+                                    },
+                                },
+                            },
+                        },
                     },
                 });
             }
