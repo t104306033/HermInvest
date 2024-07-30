@@ -103,9 +103,26 @@
                     data: dataValues,
                 };
 
+                // const innerLabel = {
+                //     id: 'innerLabel',
+                //     afterDatasetDraw(chart, args, pluginOptions) {
+                //         const { ctx } = chart;
+                //         const meta = args.meta;
+                //         const xCoor = meta.data[0].x;
+                //         const yCoor = meta.data[0].y;
+                //         const perc = chart.data.datasets[0].data[0] / meta.total * 100;
+                //         ctx.save();
+                //         ctx.textAlign = 'center';
+                //         ctx.font = '32px sans-serif';
+                //         ctx.fillText(perc.toFixed(2) + '%', xCoor, yCoor);
+                //         ctx.restore();
+                //     },
+                // };
+
                 var ctx = document.getElementById("pieChart").getContext("2d");
                 var pieChart = new Chart(ctx, {
                     type: "doughnut",
+                    // plugins: [innerLabel],
                     data: {
                         labels: labels,
                         datasets: [datasets],
@@ -125,7 +142,7 @@
                                 },
                             },
                         },
-                    },
+                    }
                 });
             }
 
