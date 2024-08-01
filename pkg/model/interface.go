@@ -7,30 +7,30 @@ import (
 type Repositorier interface {
 	CreateTransaction(t *Transaction) (int, error)
 	CreateTransactionHistory(t *Transaction) (int, error)
-	// CreateTransactionHistorys(ts []*Transaction) ([]int, error)
 	CreateTransactions(ts []*Transaction) ([]int, error)
-	DeleteAllTransactionRecordSys() error
-	DeleteAlltblTransaction() error
-	DeleteAlltblTransactionHistory() error
-	DeleteAllCashDividendRecord() error
-	DeleteTransaction(id int) error
-	DeleteSQLiteSequence() error
-	DeleteTransactions(ids []int) error
+	CreateTransactionRecordSys(tr *TransactionRecord) error
+	CreateCashDividendRecord(cd *ExDividend) error
+
 	FindEarliestTransactionByStockNo(stockNo string) (*Transaction, error)
-	InsertTransactionRecordSys(tr *TransactionRecord) error
-	InsertCashDividendRecord(cd *ExDividend) error
 	QueryCapitalReductionAll() ([]*CapitalReduction, error)
 	QueryDividendAll() ([]*ExDividend, error)
 	QueryTransactionAll() ([]*Transaction, error)
-	QueryTransactionRecordSysAll() ([]*TransactionRecord, error)
-	QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*Transaction, error)
 	QueryTransactionByID(id int) (*Transaction, error)
+	QueryTransactionByDetails(stockNo string, tranType int, date string) ([]*Transaction, error)
 	QueryTransactionRecordAll() ([]*TransactionRecord, error)
-	QueryTransactionRecordByStockNo(stockNo string, date string) ([]*TransactionRecord, error)
-	QueryTransactionRecordUnion() ([]*TransactionRecord, error)
-	QueryUnionNote()
+	QueryTransactionRecordSysAll() ([]*TransactionRecord, error)
+
 	UpdateTransaction(id int, t *Transaction) error
 
+	DeleteTransaction(id int) error
+	DeleteTransactions(ids []int) error
+
+	DropTable(tablename string) error
+
+	gormRepositorier
+}
+
+type gormRepositorier interface {
 	WithTrx(trxHandle *gorm.DB) Repositorier
 	Begin() *gorm.DB
 	Commit() *gorm.DB

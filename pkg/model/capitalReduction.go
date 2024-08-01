@@ -11,6 +11,10 @@ type CapitalReduction struct {
 	NewStockNo           string  `gorm:"column:newStockNo"`
 }
 
+func (cr *CapitalReduction) TableName() string {
+	return "tblCapitalReduction" // default table name
+}
+
 func (cr *CapitalReduction) CalcTransactionRecords(totalQuantity int, avgUnitPrice float64) (*TransactionRecord, *TransactionRecord) {
 	capitalReductionRecord := cr.calcCapitalReductionRecord(totalQuantity, avgUnitPrice)
 	distributionRecord := cr.calcDistributionRecord(totalQuantity, avgUnitPrice)

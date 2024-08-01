@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<!-- HMTL Editor https://htmleditor.io/ -->
+<!-- HMTL Formatter https://webformatter.com/html -->
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>HermInvest</title>
+        <!-- import jQuery, Bootstrap Table, ChartJS -->
+        <script src="assets/jquery-3.5.1.js"></script>
+        <link rel="stylesheet" href="assets/bootstrap-4.5.2.css" />
+        <link rel="stylesheet" href="assets/bootstrap-table-1.18.2.css" />
+        <script src="assets/bootstrap-table-1.18.2.js"></script>
+        <script src="assets/chart.umd-4.4.2.js"></script>
+        <style>
+            .bootstrap-table.bootstrap4 {
+                width: 800px;
+            }
+
+            .container {
+                display: inline-flex;
+            }
+        </style>
+    </head>
+    <body>
+        <ul>
+            <li><a href="/">HermInvest</a></li>
+            <li><a href="/transaction">Transaction</a></li>
+            <li><a href="/transactionHistory">TransactionHistory</a></li>
+            <li><a href="/transactionCash">TransactionCash</a></li>
+        </ul>
+        <h1>Transaction</h1>
+        <p>Track stock inventory.</p>
+        <div class="container">
+            <!-- Bootstrap Table -->
+            <table
+                data-toggle="table"
+                data-pagination="true"
+                data-search="true"
+                data-sort-name="TotalAmount"
+                data-sort-order="desc"
+            >
+                <thead>
+                    <tr>
+                        <th data-field="StockMapping.StockName" data-formatter="stockNameFormatter">Stock Name</th>
+                        <th data-field="Quantity">Qty(shares)</th>
+                        <th data-field="UnitPrice" data-formatter="unitPriceFormatter">Unit Price</th>
+                        <th data-field="TotalAmount">Total Amount</th>
+                        <th data-field="Taxes">Taxes</th>
+                    </tr>
+                </thead>
+            </table>
+            <!-- Chart.js  -->
+            <canvas id="pieChart" width="400" height="400"></canvas>
+
+            <canvas id="chart-area" />
+        </div>
+
+        <script>
+            fetch("/api/transaction")
+                .then(function (res) {
+                    return res.json();
+                })
+                .then(function (data) {
+                    updateTable(data);
+                    updateCanvas(data);
+                })
+                .catch(function (err) {
+                    console.error("Error fetching data:", err);
+                });
+
+            function updateTable(data) {
+                $("table").bootstrapTable("load", data);
+            }
+
+            function updateCanvas(data) {
+                var labels = [];
+                var dataValues = [];
+                var otherTotalAmount = 0;
+
+                // Sort data by TotalAmount in descending order
+                data.sort(function (a, b) {
+                    return b.TotalAmount - a.TotalAmount;
+                });
+
+                // Push top 5 stocks to labels and dataValues arrays
+                for (var i = 0; i < Math.min(5, data.length); i++) {
+                    labels.push(data[i].StockMapping.StockName);
+                    dataValues.push(data[i].TotalAmount);
+                }
+
+                // Calculate total amount of other stocks
+                for (var j = 5; j < data.length; j++) {
+                    otherTotalAmount += data[j].TotalAmount;
+                }
+
+                // Push "Other" category if there are more than 5 stocks
+                if (data.length > 5) {
+                    labels.push("Other");
+                    dataValues.push(otherTotalAmount);
+                }
+
+                var datasets = {
+                    data: dataValues,
+                };
+
+                // const innerLabel = {
+                //     id: 'innerLabel',
+                //     afterDatasetDraw(chart, args, pluginOptions) {
+                //         const { ctx } = chart;
+                //         const meta = args.meta;
+                //         const xCoor = meta.data[0].x;
+                //         const yCoor = meta.data[0].y;
+                //         const perc = chart.data.datasets[0].data[0] / meta.total * 100;
+                //         ctx.save();
+                //         ctx.textAlign = 'center';
+                //         ctx.font = '32px sans-serif';
+                //         ctx.fillText(perc.toFixed(2) + '%', xCoor, yCoor);
+                //         ctx.restore();
+                //     },
+                // };
+
+                var ctx = document.getElementById("pieChart").getContext("2d");
+                var pieChart = new Chart(ctx, {
+                    type: "doughnut",
+                    // plugins: [innerLabel],
+                    data: {
+                        labels: labels,
+                        datasets: [datasets],
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        var currentValue = context.raw,
+                                            total = context.chart._metasets[context.datasetIndex].total,
+                                            percentage = parseFloat(((currentValue / total) * 100).toFixed(1));
+
+                                        return `${context.formattedValue} NTD (${percentage}%)`;
+                                    },
+                                },
+                            },
+                        },
+                    }
+                });
+            }
+
+            // --- Bootstrap Table Field's Formatter ---
+
+            function unitPriceFormatter(value) {
+                return parseFloat(value).toFixed(2);
+            }
+
+            function stockNameFormatter(value, row) {
+                return `<a href="/api/transaction/${row.StockNo}">${value}</a>`;
+            }
+        </script>
+    </body>
+</html>

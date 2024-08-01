@@ -24,6 +24,10 @@ func NewTransactionRecord(date, time, stockNo string, tranType, quantity int, un
 	}
 }
 
+func (tr *TransactionRecord) TableName() string {
+	return "tblTransactionRecordSys" // default table name
+}
+
 func SumQuantityUnitPrice(remainingTrs []*TransactionRecord) (int, float64) {
 	var totalQuantity, totalAmount int
 	for _, tr := range remainingTrs {
@@ -57,15 +61,16 @@ func CalcRemainingTransactionRecords(trs []*TransactionRecord) ([]*TransactionRe
 
 // Transaction represents a share transaction.
 type Transaction struct {
-	ID          int     `gorm:"column:id"`
-	Date        string  `gorm:"column:date"`
-	Time        string  `gorm:"column:time"`
-	StockNo     string  `gorm:"column:stockNo"`
-	TranType    int     `gorm:"column:tranType"`
-	Quantity    int     `gorm:"column:quantity"`
-	UnitPrice   float64 `gorm:"column:unitPrice"`
-	TotalAmount int     `gorm:"column:totalAmount"`
-	Taxes       int     `gorm:"column:taxes"`
+	ID           int          `gorm:"column:id"`
+	Date         string       `gorm:"column:date"`
+	Time         string       `gorm:"column:time"`
+	StockNo      string       `gorm:"column:stockNo"`
+	TranType     int          `gorm:"column:tranType"`
+	Quantity     int          `gorm:"column:quantity"`
+	UnitPrice    float64      `gorm:"column:unitPrice"`
+	TotalAmount  int          `gorm:"column:totalAmount"`
+	Taxes        int          `gorm:"column:taxes"`
+	StockMapping StockMapping `gorm:"foreignKey:stockNo;references:stockNo"`
 }
 
 // NewTransactionFromDB creates a new Transaction object from database records.
@@ -103,6 +108,10 @@ func NewTransactionFromInput(
 	return t
 }
 
+func (t *Transaction) TableName() string {
+	return "tblTransaction" // default table name
+}
+
 // calculateTotalAmount calculates the total amount based on transaction details.
 func (t *Transaction) calculateTotalAmount() {
 	t.TotalAmount = int(float64(t.Quantity) * t.UnitPrice)
@@ -137,4 +146,13 @@ func (t *Transaction) SetQuantity(quantity int) {
 func (t *Transaction) recalculate() {
 	t.calculateTotalAmount()
 	t.calculateTaxes()
+}
+
+type StockMapping struct {
+	StockNo   string `gorm:"column:stockNo"`
+	StockName string `gorm:"column:stockName"`
+}
+
+func (sp *StockMapping) TableName() string {
+	return "tblStockMapping" // default table name
 }
