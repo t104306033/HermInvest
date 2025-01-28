@@ -30,7 +30,7 @@ func webRun(cmd *cobra.Command, args []string) {
 	router.GET("/api/transaction", apiGetTransactions)
 	router.Static("/assets", "./assets")
 
-	open("http://127.0.0.1:9453/transaction")
+	open("http://127.0.0.1:9453/api/transaction")
 
 	err := router.Run(":9453")
 	if err != nil {
@@ -50,8 +50,36 @@ func homePage(c *gin.Context) {
 
 func apiGetTransactions(c *gin.Context) {
 	// transactions := []*model.Transaction{
-	// 	{ID: 1, StockNo: "ABC", TranType: 1, Quantity: 100, UnitPrice: 10.50, TotalAmount: 1050, Taxes: 50},
-	// 	{ID: 2, StockNo: "XYZ", TranType: 2, Quantity: 50, UnitPrice: 20.25, TotalAmount: 1012, Taxes: 12},
+	// 	{
+	// 		ID:          0,
+	// 		Date:        "",
+	// 		Time:        "",
+	// 		StockNo:     "0050",
+	// 		TranType:    0,
+	// 		Quantity:    5000,
+	// 		UnitPrice:   111,
+	// 		TotalAmount: 557550,
+	// 		Taxes:       1672,
+	// 		StockMapping: model.StockMapping{
+	// 			StockNo:   "0050",
+	// 			StockName: "元大台灣50",
+	// 		},
+	// 	},
+	// 	{
+	// 		ID:          0,
+	// 		Date:        "",
+	// 		Time:        "",
+	// 		StockNo:     "00902",
+	// 		TranType:    0,
+	// 		Quantity:    7000,
+	// 		UnitPrice:   12,
+	// 		TotalAmount: 87010,
+	// 		Taxes:       259,
+	// 		StockMapping: model.StockMapping{
+	// 			StockNo:   "00902",
+	// 			StockName: "中信電池及儲能",
+	// 		},
+	// 	},
 	// }
 	db := repository.GetDBConnection()
 
