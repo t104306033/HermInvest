@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // Transaction represents a record of a share transaction.
 type TransactionRecord struct {
@@ -155,4 +158,17 @@ type StockMapping struct {
 
 func (sp *StockMapping) TableName() string {
 	return "tblStockMapping" // default table name
+}
+// Implementing MarshalJSON for custom JSON output
+// https://stackoverflow.com/questions/26303694/json-marshalling-unmarshalling-same-struct-to-different-json-format-in-go?rq=3
+func (t *Transaction) MarshalJSON() ([]byte, error) {
+	m := map[string]interface{}{}
+	m["StockNo"] = t.StockNo
+	m["StockName"] = t.StockMapping.StockName
+	m["Quantity"] = t.Quantity
+	m["UnitPrice"] = t.UnitPrice
+	m["TotalAmount"] = t.TotalAmount
+	m["Taxes"] = t.Taxes
+
+	return json.Marshal(m)
 }

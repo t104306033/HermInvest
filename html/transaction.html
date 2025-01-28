@@ -41,7 +41,7 @@
             >
                 <thead>
                     <tr>
-                        <th data-field="StockMapping.StockName" data-formatter="stockNameFormatter">Stock Name</th>
+                        <th data-field="StockName" data-formatter="stockNameFormatter">Stock Name</th>
                         <th data-field="Quantity">Qty(shares)</th>
                         <th data-field="UnitPrice" data-formatter="unitPriceFormatter">Unit Price</th>
                         <th data-field="TotalAmount">Total Amount</th>
@@ -84,7 +84,7 @@
 
                 // Push top 5 stocks to labels and dataValues arrays
                 for (var i = 0; i < Math.min(5, data.length); i++) {
-                    labels.push(data[i].StockMapping.StockName);
+                    labels.push(data[i].StockName);
                     dataValues.push(data[i].TotalAmount);
                 }
 
