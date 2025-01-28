@@ -13,7 +13,7 @@
         <script src="/assets/chart.umd-4.4.2.js"></script>
         <style>
             .bootstrap-table.bootstrap4 {
-                width: 1000px;
+                width: 600px;
             }
 
             .container {
@@ -32,23 +32,25 @@
         <p>Track stock inventory.</p>
         <div class="container">
             <!-- Bootstrap Table -->
-            <table
-                data-toggle="table"
-                data-pagination="true"
-                data-search="true"
-                data-sort-name="TotalAmount"
-                data-sort-order="desc"
-            >
-                <thead>
-                    <tr>
-                        <th data-field="StockName" data-formatter="stockNameFormatter">Stock Name</th>
-                        <th data-field="Quantity">Qty(shares)</th>
-                        <th data-field="UnitPrice" data-formatter="unitPriceFormatter">Unit Price</th>
-                        <th data-field="TotalAmount">Total Amount</th>
-                        <th data-field="Taxes">Taxes</th>
-                    </tr>
-                </thead>
-            </table>
+            <div>
+                <table
+                    data-toggle="table"
+                    data-pagination="true"
+                    data-search="true"
+                    data-sort-name="TotalAmount"
+                    data-sort-order="desc"
+                >
+                    <thead>
+                        <tr>
+                            <th data-field="StockName" data-formatter="stockNameFormatter">Stock Name</th>
+                            <th data-field="Quantity">Qty(shares)</th>
+                            <th data-field="UnitPrice" data-formatter="unitPriceFormatter">Unit Price</th>
+                            <th data-field="TotalAmount">Total Amount</th>
+                            <th data-field="Taxes">Taxes</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
             <!-- Chart.js  -->
             <canvas id="pieChart" width="400" height="400"></canvas>
 

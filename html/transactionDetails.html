@@ -12,6 +12,7 @@
         <script src="/assets/bootstrap-table-1.18.2.js"></script>
         <script src="/assets/chart.umd-4.4.2.js"></script>
         <style>
+            /* TODO: Don't control by yourself, control by Table */
             .bootstrap-table.bootstrap4 {
                 width: 1000px;
             }
@@ -32,26 +33,28 @@
         <p>Track stock details.</p>
         <div class="container">
             <!-- Bootstrap Table -->
-            <table
-                data-toggle="table"
-                data-pagination="true"
-                data-search="true"
-                data-sort-name="TotalAmount"
-                data-sort-order="desc"
-            >
-                <thead>
-                    <tr>
-                        <th data-field="Date">Date</th>
-                        <th data-field="Time">Time</th>
-                        <th data-field="StockNo">Stock No</th>
-                        <th data-field="StockName">Stock Name</th>
-                        <th data-field="Quantity">Qty (shares)</th>
-                        <th data-field="UnitPrice" data-formatter="unitPriceFormatter">Unit Price</th>
-                        <th data-field="TotalAmount">Total Amount</th>
-                        <th data-field="Taxes">Taxes</th>
-                    </tr>
-                </thead>
-            </table>
+            <div>
+                <table
+                    data-toggle="table"
+                    data-pagination="true"
+                    data-search="true"
+                    data-sort-name="TotalAmount"
+                    data-sort-order="desc"
+                >
+                    <thead>
+                        <tr>
+                            <th data-field="Date">Date</th>
+                            <th data-field="Time">Time</th>
+                            <th data-field="StockNo">Stock No</th>
+                            <th data-field="StockName">Stock Name</th>
+                            <th data-field="Quantity">Qty (shares)</th>
+                            <th data-field="UnitPrice" data-formatter="unitPriceFormatter">Unit Price</th>
+                            <th data-field="TotalAmount">Total Amount</th>
+                            <th data-field="Taxes">Taxes</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
 
         <script>
