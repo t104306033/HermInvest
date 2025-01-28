@@ -28,6 +28,7 @@ func webRun(cmd *cobra.Command, args []string) {
 	router.GET("/", homePage)
 	router.GET("/transaction", transactionPage)
 	router.GET("/api/transaction", apiGetTransactions)
+	router.GET("/api/transaction/:stockNo", apiGetTransactionsByStockNo)
 	router.Static("/assets", "./assets")
 
 	open("http://127.0.0.1:9453/api/transaction")
@@ -89,6 +90,25 @@ func apiGetTransactions(c *gin.Context) {
 	transactions, err := repo.QueryTransactionInventory()
 	if err != nil {
 		fmt.Println("err: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query transaction"})
+		return
+	}
+
+	c.JSON(http.StatusOK, transactions)
+}
+
+func apiGetTransactionsByStockNo(c *gin.Context) {
+	db := repository.GetDBConnection()
+
+	repo := repository.NewRepository(db)
+
+	stockNo := c.Param("stockNo")
+
+	transactions, err := repo.QueryTransactionInventoryByStockNo(stockNo)
+	if err != nil {
+		fmt.Println("err: ", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to query transaction by StockNo"})
+		return
 	}
 
 	c.JSON(http.StatusOK, transactions)

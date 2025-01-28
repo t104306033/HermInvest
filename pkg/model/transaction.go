@@ -182,6 +182,9 @@ func (t *Transaction) MarshalJSONbyGPT() ([]byte, error) {
 // Reference: https://stackoverflow.com/questions/26303694/json-marshalling-unmarshalling-same-struct-to-different-json-format-in-go?rq=3
 func (t *Transaction) MarshalJSON() ([]byte, error) {
 	m := map[string]interface{}{}
+	m["ID"] = t.ID
+	m["Date"] = t.Date
+	m["Time"] = t.Time
 	m["StockNo"] = t.StockNo
 	m["StockName"] = t.StockMapping.StockName
 	m["Quantity"] = t.Quantity
