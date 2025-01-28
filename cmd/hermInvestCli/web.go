@@ -25,13 +25,17 @@ func init() {
 func webRun(cmd *cobra.Command, args []string) {
 	router := gin.Default()
 
+	// load HTML files - Is it a best way?
+	router.LoadHTMLFiles("html/transactionDetails.html")
+
 	router.GET("/", homePage)
 	router.GET("/transaction", transactionPage)
 	router.GET("/api/transaction", apiGetTransactions)
+	router.GET("/transactionDetails/:stockNo", transactionDetailsPage)
 	router.GET("/api/transaction/:stockNo", apiGetTransactionsByStockNo)
 	router.Static("/assets", "./assets")
 
-	open("http://127.0.0.1:9453/api/transaction")
+	open("http://127.0.0.1:9453/transaction")
 
 	err := router.Run(":9453")
 	if err != nil {
@@ -123,6 +127,16 @@ func transactionPage(c *gin.Context) {
 	}
 
 	c.Data(http.StatusOK, "text/html", pageHTML)
+}
+
+func transactionDetailsPage(c *gin.Context) {
+
+	stockNo := c.Param("stockNo")
+
+	// transfer stockNo to template
+	c.HTML(http.StatusOK, "transactionDetails.html", gin.H{
+		"stockNo": stockNo,
+	})
 }
 
 func open(url string) error { // open url from browser
